@@ -13,6 +13,7 @@ from discord.ext import commands
 from lib.config import headers
 from lib.datetime_lib import random_date, custom_strftime
 from lib.emotes import basic_emoji, scoots_emoji
+from lib.wiki_fact import get_day_fact, WikipediaError
 
 
 class Miscellaneous(commands.Cog):
@@ -81,31 +82,21 @@ class Miscellaneous(commands.Cog):
                 await ctx.message.add_reaction(basic_emoji.get("Si"))
                 return
 
-        facts = None
         status = await ctx.send("Looking up an interesting fact...")
 
         # Try to find an interesting fact
         try:
-            fact = wikipedia.page(date.strftime("%B") + " " + str(date.day)).section("Events")
-            await status.edit(content="Searching wikipedia.com/wiki/" + date.strftime("%B") + "_" + str(date.day) + " for an interesting fact.")
-            # Library returns long string or None
-            facts = fact.splitlines()
+            fact = get_day_fact(date)
 
-        # Returned None -> error -> stop
-        except AttributeError:
+        # Error -> stop
+        except WikipediaError as e:
             await status.delete()
-            await ctx.send("Couldn't access wikipedia entry " + basic_emoji.get("Pepega"))
+            await ctx.send(e)
+            return
 
-        # Returned empty string
-        if not facts:
-            await status.delete()
-            await ctx.send("Didn't find any interesting fact on wikipedia.com/wiki/" + date.strftime('%B') + '_' + str(date.day) + ". Probably retarded formatting on this page for the 'events' section " + basic_emoji.get("Sadge"))
-
-        # Choose a random line (each line is 1 fact)
-        else:
-            await status.delete()
-            fact = await ctx.send(msg + random.choice(facts))
-            await fact.add_reaction(random.choice(scoots_emoji))
+        await status.delete()
+        response = await ctx.send(msg + fact)
+        await response.add_reaction(random.choice(scoots_emoji))
 
     @commands.command(name="roll", help="Generate a random number between 1 and 100 by default.")
     async def roll(self, ctx, num: str = "100"):
