@@ -128,4 +128,4 @@ dmypy.json
 .pyre/
 
 # Temp files
-.txt
+*.txt
