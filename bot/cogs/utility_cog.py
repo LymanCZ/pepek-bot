@@ -1,22 +1,16 @@
-import os
 import io
-import sys
 import json
+import os
 import urllib
-import asyncio
-import discord
-import requests
-import googletrans
-from os import path
 from textwrap import wrap
+
+import discord
+import googletrans
+import requests
 from discord.ext import commands
 from google.cloud import vision
 from google.oauth2 import service_account
 
-# This is one way to solve relative imports, I hate this for multiple reasons
-# 1. Breaks PEP 8: E402 module level import not at top of file
-# 2. Absolutely inane way of importing from '../lib/'
-sys.path.append(path.join(path.dirname(__file__), '..'))
 from lib import emoji_locale
 from lib.emotes import basic_emoji
 
