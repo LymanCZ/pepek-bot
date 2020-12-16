@@ -1,19 +1,18 @@
-import os
-import random
-import ctypes
 import asyncio
+import ctypes
+import os
+
 import discord
-import datetime
 import requests
 import wikipedia
 import youtube_dl
-import basc_py4chan
-from typing import Union
 from bs4 import BeautifulSoup
 from discord.ext import commands
 from googleapiclient.discovery import build
-from lib.emotes import basic_emoji
 
+from lib.config import headers
+from lib.datetime_lib import *
+from lib.emotes import basic_emoji, scoots_emoji
 
 bot = commands.Bot(command_prefix='pp.')
 
@@ -75,10 +74,6 @@ ytdlData = None
 
 
 # Lists of different types of emojis used to choose a random one
-scoots_emoji = [
-    "<:forsenScoots:736973346142552195>",
-    "<:OMGScoots:736973384570634321>"
-]
 dance_emoji = [
     "<a:forsenPls:741611256460476496>",
     "<a:forsenDiscoSnake:742013168234135664>",
@@ -98,15 +93,6 @@ dance_react = [
     "<a:doctorDance:744473646298431510>"
 ]
 
-# HTTP header used when looking up Garfield comic
-headers = {
-    "Access-Control-Allow-Origin" : "*",
-    "Access-Control-Allow-Methods" : "GET",
-    "Access-Control-Allow-Headers" : "Content-Type",
-    "Access-Control-Max-Age" : "3600",
-    "User-Agent" : "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
-}
-
 # Bot's discord activites
 activites = [
     discord.Game(name="with křemík."),
@@ -122,7 +108,7 @@ async def status_changer():
             # Wait a little longer if a connection error occurs
             await asyncio.asleep(90)
         await asyncio.sleep(30)
-        
+
 # Posts Garfield strip daily to a channel
 async def daily_garfield():
     # Get time remaining until next release
@@ -165,13 +151,6 @@ async def on_command_error(ctx, error):
         await ctx.send("{0}📣 UNEXPECTED QUOTE ERROR\nUse `\\` to escape your quote(s) {1}".format(basic_emoji.get("Pepega"), basic_emoji.get("forsenScoots")))
     else:
         raise error
-    
-# Get a random datetime in range
-def random_date(start, end):
-    delta = end - start
-    int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
-    random_second = random.randrange(int_delta)
-    return start + datetime.timedelta(seconds=random_second)
 
 # Time remaining until next Garfield strip comes out
 def time_until_next_garfield():
@@ -179,30 +158,18 @@ def time_until_next_garfield():
     tomorrow = dt + datetime.timedelta(days=1)
     return datetime.datetime.combine(tomorrow, datetime.time.min) - dt + datetime.timedelta(hours=6, minutes=7)
 
-# Format date to Garfield compatible (YYYY/MM/DD)
-def format_date(date):
-    return "{0}/{1}/{2}".format(str(date.year), str(date.month).zfill(2), str(date.day).zfill(2))
-
-# Returns "st", "nd" or "rd" for a number
-def suffix(n):
-    return "th" if 11 <= n <= 13 else {1 : "st", 2 : "nd", 3 : "rd"}.get(n % 10, "th")
-# Formats datetime using above function
-def custom_strftime(format, date):
-    return date.strftime(format).replace("{S}", str(date.day) + suffix(date.day))
-
-    
 # Returns a list of videos found with title query
 def youtube_search(title):
     search_response = youtube.search().list(q=title, part="id,snippet", maxResults=10).execute()
     videos = []
-    
+
     # Parse response
     for search_result in search_response.get("items", []):
         # Only take videos (not channels or playlists)
         if search_result["id"]["kind"] == "youtube#video":
             # Add pairs of ('title - [channel]' : 'video_id') to list
             videos.append(("`{0}` - `[{1}]`".format(search_result["snippet"]["title"], search_result["snippet"]["channelTitle"]), search_result["id"]["videoId"]))
-        
+
         # Stop at 5
         if len(videos) == 5:
             return videos
@@ -239,13 +206,13 @@ async def garf_comic(channel, date):
     await status.edit(content="Garfield comic found.")
     link = picture[0].img["src"]
     await status.delete()
-    
+
     await channel.send(link)
 
 class Garfield(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     @commands.command(name="today", help="Get today's Garfield comic.")
     async def today(self, ctx):
         now = datetime.datetime.utcnow()
@@ -359,12 +326,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
         global ytdlData
         filename = ytdlData['url']
         return self(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=ytdlData)
-        
+
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
-        
+
         if 'entries' in data:
             # Take first item from a playlist
             data = data['entries'][0]
@@ -409,21 +376,21 @@ async def youtubeURLextractor(ctx, arg):
                 valid_numbers.append(number_emojis[i])
                 i += 1
             # Display message with available videos
-            msg = await ctx.send(poll)            
-            
+            msg = await ctx.send(poll)
+
             # Add options
             for number in valid_numbers:
                 await msg.add_reaction(number)
             await msg.add_reaction('❌')
-                
+
             # Checks if added reaction is the one we're waiting for
             def check(reaction, user):
                 return user == ctx.message.author and (str(reaction.emoji) in valid_numbers or str(reaction.emoji) == '❌')
-                       
+
             reaction = None
             try:
                 # Watch for reaction
-                reaction, user = await bot.wait_for('reaction_add', timeout=120, check=check)               
+                reaction, user = await bot.wait_for('reaction_add', timeout=120, check=check)
             except asyncio.TimeoutError:
                 await ctx.send('No option chosen (timed out) ' + basic_emoji.get('Si'))
                 await msg.delete()
@@ -671,220 +638,9 @@ class Music(commands.Cog):
             title = await ctx.send(random.choice(dance_emoji) + ' 🎶 Now playing 🎶: ' + song)
             await title.add_reaction(random.choice(dance_react))
 
-                    
-class Miscellaneous(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-                
-    @commands.command(name='ping', help="Display bot's ping.")
-    async def ping(self, ctx):
-        ms = (datetime.datetime.utcnow() - ctx.message.created_at).total_seconds() * 1000
-        await ctx.send(basic_emoji.get('Pepega') + ' 🏓 Pong! `{0}ms`'.format(int(ms)))
 
-    @commands.command(name='deth', aliases=['death'], help="Find out when you or someone else will die.")
-    async def deth(self, ctx, user: Union[discord.User, str, None]):
-        # Set seed (consistent time everytime for each user)
-        if not user:
-            random.seed(ctx.message.author.id)
-            name = "You"
-        elif isinstance(user, discord.User):
-            random.seed(user.id)
-            name = user.display_name
-        elif isinstance(user, discord.ClientUser):
-            random.seed(user.id)
-            name = user.name
-        else:
-            random.seed(abs(hash(user.lower())))
-            name = user
-
-        causes = [
-            "cardiovascular disease",
-            "cancer",
-            "dementia",
-            "diarrheal disease",
-            "tuberculosis",
-            "malnutrition",
-            "HIV/AIDS",
-            "malaria",
-            "smoking",
-            "suicide",
-            "homicide",
-            "natural disaster",
-            "road incident",
-            "drowning",
-            "fire",
-            "terrorism",
-            "death by animal",
-            "death by poison",
-            "death by pufferfish",
-            "death by sauna",
-            "death by electrocution",
-            "crushed by murphy bed"
-        ]
-
-        date = random_date(datetime.date(2025,1,1), datetime.date(2100, 1, 1))
-        await ctx.send("{0} will die on {1}. Cause of deth: {2}.".format(name, custom_strftime('%B {S}, %Y', date), random.choice(causes)))
-        # Use system time again (stops predictability of other things that use randomness)
-        random.seed()
-
-    @commands.command(name='fact', help="Get random fact about a day.")
-    async def fact(self, ctx, arg1: str = '', arg2: str = ''):
-        date = None
-        msg = ''
-        if not arg1 or not arg2:
-            date = datetime.datetime.today()
-            msg = 'On this day in the year '
-        elif not arg1.isnumeric() or not arg2.isnumeric():
-            await ctx.send("That's not even a numeric date. Try 'Month Day'.")
-            await ctx.message.add_reaction(basic_emoji.get('Si'))
-            return
-        else:
-            a1 = int(arg1)
-            a2 = int(arg2)
-            correctDate = None
-            now = datetime.date.today()
-            try:
-                date = datetime.date(2000,a1,a2)
-                msg = 'On ' + custom_strftime('%B {S}', date) + ' in the year '
-                correctDate = True
-            except ValueError:
-                correctDate = False
-            if not correctDate:
-                await ctx.send("No..? You must be using the wrong calendar. Try 'Month Day'.")
-                await ctx.message.add_reaction(basic_emoji.get('Si'))
-                return
-
-        facts = None
-        status = await ctx.send('Looking up an interesting fact...')
-        fact = ''
-        wiki_success = True
-        try:
-            fact = wikipedia.page(date.strftime('%B') + ' ' + str(date.day)).section('Events')
-            await status.edit(content='Searching wikipedia.com/wiki/' + date.strftime('%B') + '_' + str(date.day) + ' for an interesting fact.')
-            facts = fact.splitlines()
-        except:
-            wiki_success = False
-        if not wiki_success:
-            await status.delete()
-            fact = await ctx.send("Couldn't access wikipedia entry " + basic_emoji.get('Sadge'))
-        elif not facts:
-            await status.delete()
-            fact = await ctx.send("Didn't find any interesting fact on wikipedia.com/wiki/" + date.strftime('%B') + '_' + str(date.day) + ". Probably retarded formatting on this page for the 'events' section." + basic_emoji.get('Sadge'))
-        else:
-            await status.delete()
-            fact = await ctx.send(msg + random.choice(facts))
-            await fact.add_reaction(random.choice(scoots_emoji))
-
-    @commands.command(name='roll', help='Generate a random number between 1 and 100 by default.')
-    async def roll(self, ctx, input: str = '100'):
-        result = "No, I don't think so. " + basic_emoji.get('forsenSmug')
-        if input.isnumeric():
-            result = str(random.randint(1, int(input)))
-        else:
-            await ctx.message.add_reaction(basic_emoji.get('Si'))
-        await ctx.send(result)
-
-    @commands.command(name='decide', aliases=['choose'], help="Decide between options.")
-    async def decide(self, ctx, *args):
-        # No arguments -> exit
-        if not args:
-            await ctx.send("Decide between what? " + basic_emoji.get('Pepega') + basic_emoji.get('Clap') + "\nUse `;`, `:`, `,` or ` or `, to separate options.")
-            await ctx.message.add_reaction(basic_emoji.get('Si'))
-            return
-
-        raw = ' '.join(str(i) for i in args)
-
-        options = raw.split(';')
-        if len(options) < 2:
-            options = raw.split(':')
-            if len(options) < 2:
-                options = raw.split(',')
-                if len(options) < 2:
-                    options = raw.split(' or ')
-
-        if len(options) < 2:
-            await ctx.send("Separator not recognized, use `;`, `:`, `,` or ` or `, to separate options.")
-        else:
-            await ctx.send(random.choice(options))
-
-    @commands.command(name='joke', aliases=['cringe'], help="Get a random joke")
-    async def joke(self, ctx):
-        id = random.randint(1, 3773)
-        url_base = "http://stupidstuff.org/jokes/joke.htm?jokeid={0}".format(id)
-        
-        joke_source = None
-        try:
-            joke_source = requests.get(url_base, headers)
-            joke_source.raise_for_status()
-        except:
-            fail = await ctx.send("Bad response (status code {0}) from {1}".format(joke_source.status_code, url_base))
-            await fail.add_reaction(basic_emoji.get("Si"))
-            return
-        
-        soup = BeautifulSoup(joke_source.content, 'html.parser')
-        # joke_body = [item.get_text() for item in soup.select('span.gen_joke')]
-        # joke_body = soup.find_all(class_='gen_joke')
-        # joke_body = soup.find_all(class_=' gen_joke')
-        # joke_body = soup.find_all('span', attrs={'class': 'gen_joke'})
-        
-        table = soup.find('table', attrs={'class': 'scroll'})
-        
-        if not table:
-            fail = await ctx.send("Joke not found on {0}".format(url_base))
-            await fail.add_reaction(basic_emoji.get("Si"))
-            return
-        
-        for row in table.findAll("tr"):
-            await ctx.send(row.text)
-               
-    @commands.command(name='chan', aliases=['4chan'], help="Get a random 4chan/4channel post.")
-    async def chan(self, ctx, board: str = '', arg: str = ''):
-        if board.lower() == "random":
-            board_list = ['a','b','c','d','e','f','g','gif','d','h','hr','k','m','o','p','r','s','t','u','v','vg','w','wg','i','ic','r9k','cm','hm','y','3','adv','an','cgl','ck','co','diy','fa','fit','hc','int','jp','lit','mlp','mu','n','po','pol','sci','soc','sp','tg','toy','trv','tv','vp','wsg','x']
-            board = random.choice(board_list)
-        
-        if not board:
-            msg = await ctx.send("No board specified.")
-            await msg.add_reaction(basic_emoji.get("Si"))
-            return
-
-        threads = None
-        try:
-            b = basc_py4chan.Board(board)
-            threads = b.get_all_threads()
-        except:
-            msg = await ctx.send("`/{0}/` doesn't exist.".format(board))
-            await msg.add_reaction(basic_emoji.get("Si"))
-            return
-
-        result = ""
-        post = None
-        # Find post with text
-        if arg.lower() == "text" or arg.lower() == "txt":
-            while not post or not post.text_comment:
-                thread = random.choice(threads)
-                post = random.choice(thread.posts)
-                result = post.text_comment
-        # Find post with image
-        elif arg.lower() == "image" or arg.lower() == "img":
-            while not post or not post.has_file:
-                thread = random.choice(threads)
-                post = random.choice(thread.posts)
-                result = "|| {0} ||\n{1}".format(post.file_url, post.text_comment)
-        else:
-            while not post or not post.text_comment:
-                thread = random.choice(threads)
-                post = random.choice(thread.posts)
-                if post.has_file:
-                    result = "|| {0} ||\n{1}".format(post.file_url, post.text_comment)
-                else:
-                    result = post.text_comment
-        
-        await ctx.send(result[:2000])
-
-    
-bot.add_cog(Garfield(bot))
 bot.add_cog(Music(bot))
-bot.add_cog(Miscellaneous(bot))
+bot.add_cog(Garfield(bot))
+bot.load_extension("cogs.miscellaneous_cog")
 bot.load_extension("cogs.utility_cog")
 bot.run(DISCORD_TOKEN)
