@@ -13,3 +13,8 @@ basic_emoji = {
     "Okayga": "<:Okayga:750974019104276521>",
     "residentCD": "<:residentCD:750974439092518922>"
 }
+
+scoots_emoji = [
+    "<:forsenScoots:736973346142552195>",
+    "<:OMGScoots:736973384570634321>"
+]
