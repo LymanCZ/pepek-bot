@@ -3,19 +3,15 @@ import ctypes
 import os
 
 import discord
-import requests
-import wikipedia
 import youtube_dl
-from bs4 import BeautifulSoup
 from discord.ext import commands
 from googleapiclient.discovery import build
 
-from lib.config import headers
+from cogs.garfield_cog import daily_garfield
 from lib.datetime_lib import *
-from lib.emotes import basic_emoji, scoots_emoji
+from lib.emotes import basic_emoji
 
 bot = commands.Bot(command_prefix='pp.')
-
 
 # Bot's token
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -106,23 +102,8 @@ async def status_changer():
             await bot.change_presence(activity=random.choice(activites))
         except:
             # Wait a little longer if a connection error occurs
-            await asyncio.asleep(90)
+            await asyncio.sleep(90)
         await asyncio.sleep(30)
-
-# Posts Garfield strip daily to a channel
-async def daily_garfield():
-    # Get time remaining until next release
-    x = datetime.datetime.utcnow()
-    y = x.replace(day=x.day, hour=6, minute=7)
-    if not (x.hour < 6 or (x.hour == 6 and x.minute < 7)):
-        y += datetime.timedelta(days=1)
-    delta_t = y - x
-    # Wait until then
-    await asyncio.sleep(delta_t.total_seconds())
-    # Afterwards, post today's Garfield strip and repeat every 24 hours
-    while True:
-        await garf_comic(bot.guilds[0].text_channels[0], datetime.datetime.utcnow())
-        await asyncio.sleep(86400)
 
 # If bot restarted while it was connected to a voice channel, the bot doesn't actually go "offline" on Discord if it comes up online in a few seconds, so it doesn't get disconnected and attempting to connect while already connected yields an exception
 async def leave_voice():
@@ -133,9 +114,9 @@ async def leave_voice():
 # Runs only once when bot boots up, creates background tasks
 @bot.event
 async def on_ready():
-    bot.loop.create_task(status_changer())
-    bot.loop.create_task(daily_garfield())
     bot.loop.create_task(leave_voice())
+    bot.loop.create_task(status_changer())
+    bot.loop.create_task(daily_garfield(bot.guilds[0].text_channels[0]))
 
 # Catches some errors that are a fault of the user to notify them
 @bot.event
@@ -151,12 +132,6 @@ async def on_command_error(ctx, error):
         await ctx.send("{0}📣 UNEXPECTED QUOTE ERROR\nUse `\\` to escape your quote(s) {1}".format(basic_emoji.get("Pepega"), basic_emoji.get("forsenScoots")))
     else:
         raise error
-
-# Time remaining until next Garfield strip comes out
-def time_until_next_garfield():
-    dt = datetime.datetime.utcnow()
-    tomorrow = dt + datetime.timedelta(days=1)
-    return datetime.datetime.combine(tomorrow, datetime.time.min) - dt + datetime.timedelta(hours=6, minutes=7)
 
 # Returns a list of videos found with title query
 def youtube_search(title):
@@ -175,140 +150,6 @@ def youtube_search(title):
             return videos
     return videos
 
-async def garf_comic(channel, date):
-    link = "Something went wrong."
-    # Construct URL using date
-    url = "http://www.gocomics.com/garfield/" + format_date(date)
-    status = await channel.send("{0} Sending HTTP request... {1}".format(basic_emoji.get("hackerCD"), basic_emoji.get("docSpin")))
-    # GET page
-    response = None
-    try:
-        response = requests.get(url, headers)
-        response.raise_for_status()
-    # Network error
-    except:
-        fail = await channel.send("Bad response (status code: {0}) from `{1}`".format(response.status_code, url))
-        await status.delete()
-        await fail.add_reaction(basic_emoji.get("Si"))
-        return
-    await status.edit(content="Parsing {0}kb... {1}".format(str(round((len(response.content)/1024.0),2)), basic_emoji.get("docSpin")))
-    # Scrape page for comic
-    soup = BeautifulSoup(response.content, "html.parser")
-    await status.edit(content="Looking for Garfield comic...")
-    picture = soup.find_all("picture", attrs={"class" : "item-comic-image"})
-    # If not found (perhaps they changed how it's embedded)
-    if not picture or not picture[0]:
-        fail = await channel.send("Garfield comic not found on " + url)
-        await status.delete()
-        await fail.add_reaction(basic_emoji.get("Si"))
-        return
-    # Else send comic strip
-    await status.edit(content="Garfield comic found.")
-    link = picture[0].img["src"]
-    await status.delete()
-
-    await channel.send(link)
-
-class Garfield(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(name="today", help="Get today's Garfield comic.")
-    async def today(self, ctx):
-        now = datetime.datetime.utcnow()
-        # If today's comic isn't out yet
-        if now.hour < 6 or (now.hour==6 and now.minute < 7):
-            release = datetime.datetime(now.year, now.month, now.day, 5, 7, 0, 0)
-            td = (release - now)
-            hours = td.seconds // 3600 % 24
-            minutes = td.seconds // 60 % 60
-            seconds = td.seconds - hours*3600 - minutes*60
-            await ctx.send("You will have to be patient, today's comic comes out in {0}:{1}:{2}.".format(str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2)))
-        else:
-            await garf_comic(ctx.channel, now)
-
-    @commands.command(name="yesterday", help="Get yesterdays's Garfield comic.")
-    async def yesterday(self, ctx):
-        now = datetime.datetime.utcnow()
-        await garf_comic(ctx.channel, now - datetime.timedelta(days=1))
-
-    @commands.command(name="tomorrow", help="Get tomorrow's Garfield comic? Unless??")
-    async def tomorrow(self, ctx):
-        td = time_until_next_garfield()
-        hours = td.seconds // 3600 % 24
-        now = datetime.datetime.utcnow()
-        minutes = td.seconds // 60 % 60
-        seconds = td.seconds - hours*3600 - minutes*60
-        if now.hour < 6 or (now.hour==6 and now.minute < 7):
-            hours += 24
-        await ctx.message.add_reaction(basic_emoji.get("Si"))
-        await ctx.send("You will have to be patient, tomorrow's comic comes out in {0}:{1}:{2}.".format(str(hours).zfill(2), str(minutes).zfill(2), str(seconds).zfill(2)))
-
-    @commands.command(name="random", help="Get random Garfield comic.")
-    async def rand_date(self, ctx):
-        # Get a random day and that day's Garfield strip
-        rd = random_date(datetime.date(1978, 6, 19), datetime.datetime.utcnow().date())
-        await garf_comic(ctx.channel, rd)
-        # Try to find an interesting fact about that day
-        facts = None
-        status = await ctx.send("Looking up an interesting fact... " + basic_emoji.get("docSpin"))
-        fact = ""
-        wiki_success = True
-        try:
-            fact = wikipedia.page(rd.strftime("%B") + " " + str(rd.day)).section("Events")
-            await status.edit(content="Searching wikipedia.com/wiki/{0}_{1} for an interesting fact.".format(rd.strftime("%B"), str(rd.day)))
-            facts = fact.splitlines()
-        except:
-            wiki_success = False
-        if not wiki_success:
-            await status.delete()
-            fact = await ctx.send("Couldn't access wikipedia entry {0}\nThis comic came out in {1}.".format(basic_emoji.get("Pepega"), custom_strftime("%B {S}, %Y", rd)))
-        elif not facts:
-            await status.delete()
-            fact = await ctx.send("Didn't find any interesting fact on wikipedia.com/wiki/{0}_{1}. Probably retarded formatting on this page for the 'events' section.".format(rd.strftime("%B"), str(rd.day), basic_emoji.get("Pepega")))
-        else:
-            await status.delete()
-            fact = await ctx.send("This comic came out in {0}. On this day also in the year {1}".format(custom_strftime("%B {S}, %Y", rd), random.choice(facts).lstrip()))
-            await fact.add_reaction(random.choice(scoots_emoji))
-
-    @commands.command(name="garf", help="Get specific Garfield comic, format: 'Year Month Day'.")
-    async def garf(self, ctx, arg1: str = "", arg2: str = "", arg3: str = ""):
-        result = "No, I don't think so. " + basic_emoji.get("forsenSmug")
-        # Parsing input..
-        if not arg1 or not arg2 or not arg3:
-            result = "Date looks like 'Year Month Day', ie. '2001 9 11' :)."
-            await ctx.message.add_reaction(basic_emoji.get("Si"))
-        elif not arg1.isnumeric() or not arg2.isnumeric() or not arg3.isnumeric():
-            result = "That's not even a numeric date."
-            await ctx.message.add_reaction(basic_emoji.get("Si"))
-        else:
-            a1 = int(arg1)
-            a2 = int(arg2)
-            a3 = int(arg3)
-            correctDate = None
-            newDate = None
-            now = datetime.date.today()
-            try:
-                newDate = datetime.date(a1,a2,a3)
-                correctDate = True
-            except ValueError:
-                correctDate = False
-            if not correctDate:
-                result = "No..? You must be using the wrong calendar."
-                await ctx.message.add_reaction(basic_emoji.get("Si"))
-            elif newDate > now:
-                result = "You will have to wait for that day to come."
-                await ctx.message.add_reaction(basic_emoji.get("Si"))
-            elif newDate >= datetime.date(1978, 6, 19):
-                result = ""
-                # Correct date - sends Garfield strip
-                await garf_comic(ctx.channel, datetime.date(a1, a2, a3))
-            else:
-                result = "Unfortunately, Garfield didn't exist before 19th June 1978."
-                await ctx.message.add_reaction(basic_emoji.get("Si"))
-        # Incorrect date - sends error message
-        if result:
-            await ctx.send(result)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
@@ -640,7 +481,7 @@ class Music(commands.Cog):
 
 
 bot.add_cog(Music(bot))
-bot.add_cog(Garfield(bot))
+bot.load_extension("cogs.garfield_cog")
 bot.load_extension("cogs.miscellaneous_cog")
 bot.load_extension("cogs.utility_cog")
 bot.run(DISCORD_TOKEN)
