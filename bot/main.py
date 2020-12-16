@@ -1,8 +1,5 @@
 import os
-import io
-import json
 import random
-import urllib
 import ctypes
 import asyncio
 import discord
@@ -10,26 +7,19 @@ import datetime
 import requests
 import wikipedia
 import youtube_dl
-import googletrans
-import emoji_locale
 import basc_py4chan
 from typing import Union
-from typing import Optional
-from textwrap import wrap
 from bs4 import BeautifulSoup
 from discord.ext import commands
-from google.cloud import vision
-from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from lib.emotes import basic_emoji
 
-bot = commands.Bot(command_prefix='p.')
+
+bot = commands.Bot(command_prefix='pp.')
+
 
 # Bot's token
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-# Openweathermap (weather)
-WEATHER_TOKEN = os.getenv("WEATHER_TOKEN")
-# Google cloud APIs (VisionAI - text OCR) - it's in JSON, instead of writing to file just parsing using json library
-GOOGLE_CLOUD_CREDENTIALS = service_account.Credentials.from_service_account_info(json.loads(os.getenv("GOOGLE_CLIENT_SECRETS")))
 # Youtube search
 YOUTUBE_API_TOKEN = os.getenv("YOUTUBE_API_TOKEN")
 # Log-in for youtube to download age-restricted videos ~this still doesn't solve the issue, I don't understand why~
@@ -38,15 +28,9 @@ YT_PASS = os.getenv("YT_PASS")
 # youtube-dl wants cookies as a text file ~this also doesn't solve the age-restriction issue~
 with open("cookies.txt", "w") as text_file:
     print(os.getenv('COOKIE_DATA'), file=text_file)
-# WolframAlpha queries
-WOLFRAM_APPID = os.getenv("WOLFRAM_APPID")
 
 # Used when looking up videos
 youtube = build("youtube", "v3", developerKey=YOUTUBE_API_TOKEN)
-# Used to read text from image
-google_vision = vision.ImageAnnotatorClient(credentials=GOOGLE_CLOUD_CREDENTIALS)
-# Used to translate text
-translator = googletrans.Translator()
 # To be able to transmit audio packets (music)
 discord.opus.load_opus(ctypes.util.find_library("opus"))
 # https://stackoverflow.com/questions/56060614/how-to-make-a-discord-bot-play-youtube-audio
@@ -89,21 +73,7 @@ repeat_song = False
 # Keeps downloaded data of last song (used when repeating in order to not download same song repeatedly)
 ytdlData = None
 
-# Library of fun emojis used thorough
-basic_emoji = {
-    "Si" : "<:Si:523966164704034837>",
-    "Sadge" : "<:Sadge:696437945392955453>",
-    "Pepega" : "<:Pepega:739020602194657330>",
-    "forsenSmug" : "<:forsenSmug:736973361283858442>",
-    "forsenScoots" : "<:forsenScoots:736973346142552195>",
-    "forsenT" : "<:forsenT:743128058545832048>",
-    "docSpin" : "<a:docSpin:743133871889055774>",
-    "hackerCD" : "<a:hackerCD:744835324827402250>",
-    "Clap" : "<a:Clap:746628991753912401>",
-    "FeelsWeirdMan" : "<:FeelsWeirdMan:750942213676073012>",
-    "Okayga" : "<:Okayga:750974019104276521>",
-    "residentCD" : "<:residentCD:750974439092518922>"
-}
+
 # Lists of different types of emojis used to choose a random one
 scoots_emoji = [
     "<:forsenScoots:736973346142552195>",
@@ -220,26 +190,6 @@ def suffix(n):
 def custom_strftime(format, date):
     return date.strftime(format).replace("{S}", str(date.day) + suffix(date.day))
 
-# Uses Google Cloud VisionAI
-def detect_text(url):
-    # Download image from url
-    response = requests.get(url)
-    image = None
-    try:
-        # Convert data to image
-        image_bytes = io.BytesIO(response.content)
-        image = vision.types.Image(content=image_bytes.read())
-    except:
-        return "That's not an image? {0}{1}\n{2}".format(basic_emoji.get("Pepega"), basic_emoji.get("Clap"), basic_emoji.get("forsenSmug"))
-    
-    # Let VisionAI do its thing
-    cloud_response = google_vision.text_detection(image=image)
-    texts = cloud_response.text_annotations
-    # Couldn't read anything
-    if not texts:
-        return "Can't see shit! {0}".format(basic_emoji.get("forsenT"))
-    else:
-        return texts[0].description
     
 # Returns a list of videos found with title query
 def youtube_search(title):
@@ -720,127 +670,7 @@ class Music(commands.Cog):
         else:
             title = await ctx.send(random.choice(dance_emoji) + ' 🎶 Now playing 🎶: ' + song)
             await title.add_reaction(random.choice(dance_react))
-  
-class Utility(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-                               
-    @commands.command(name='read', help='Read image.')
-    @commands.guild_only()
-    async def read(self, ctx, url: str = ''):
-        # Check whether user provided url or embedded image
-        if not url and not ctx.message.attachments:
-            await ctx.send("Read what? " + basic_emoji.get('Pepega') + basic_emoji.get('Clap') + '\n' + basic_emoji.get('forsenSmug'))
-            await ctx.message.add_reaction(basic_emoji.get('Si'))
-            return
-        # Get url to the image
-        if not url:
-            url = ctx.message.attachments[0].url
 
-        # Display status
-        status = await ctx.send('Processing... ' + basic_emoji.get('docSpin'))
-        # Attempt to detect text
-        text = detect_text(url)
-        await status.delete()
-        # Split into short enough segments (Discord's max message length is 2000)
-        for s in wrap(text, 1990):
-            await ctx.send('```' + s + '```')
-
-    @commands.command(name='translate', help="Translate text.")
-    @commands.guild_only()
-    async def translate(self, ctx, *, arg: str = ''):
-        # No text entered -> nothing to translate
-        if not arg:
-            await ctx.send("Translate what? " + basic_emoji.get('Pepega') + basic_emoji.get('Clap') + '\n' + basic_emoji.get('forsenSmug'))
-            await ctx.message.add_reaction(basic_emoji.get('Si'))
-            return
-
-        result = None
-        # Combine tuple into one long string
-        #arg = ' '.join(str(i) for i in args)
-        # Get first word
-        input = arg.split(' ', 1)
-        # If it's an ISO639-1 language code, translate to that language
-        if input[0] in googletrans.LANGUAGES:
-            result = translator.translate(input[1], dest=input[0])
-        # Otherwise translate to english by default
-        else:
-            result = translator.translate(arg, dest='en')
-
-        # Using .lower() because for example chinese-simplified is 'zh-cn', but result.src would return 'zh-CN' (so dumb)
-        msg = "Translated from `{0}` {1} to `{2}` {3}".format(googletrans.LANGUAGES.get(result.src.lower()), emoji_locale.code_to_country(result.src.lower()), googletrans.LANGUAGES.get(result.dest.lower()), emoji_locale.code_to_country(result.dest.lower()))
-        # Remove any quotes from translated text (I couldn't figure out how to just escape them so discord wouldn't throw exceptions over un-quoted string or some shit)
-        await ctx.send("{0}\n```{1}```".format(msg, result.text[:1950]))
-                                
-    # Yoinked from https://github.com/Toaster192/rubbergod/blob/master/cogs/weather.py WideHard
-    @commands.command(name='weather', help="Get location's weather.")
-    async def weather(self, ctx, *args):
-        city = 'Prague'
-        if args:
-            city = ' '.join(str(i) for i in args)
-        url = ('http://api.openweathermap.org/data/2.5/weather?q=' + city + '&units=metric&lang=en&appid=' + WEATHER_TOKEN)
-        res = requests.get(url).json()
-        if str(res['cod']) == '200':
-            description = 'Weather in ' + res['name'] + ', ' + res['sys']['country']
-            embed = discord.Embed(title='Weather', description=description)
-            image = 'http://openweathermap.org/img/w/' + res['weather'][0]['icon'] + '.png'
-            embed.set_thumbnail(url=image)
-            weather = res['weather'][0]['main'] + ' (' + res['weather'][0]['description'] + ') '
-            temp = str(res['main']['temp']) + '°C'
-            feels_temp = str(res['main']['feels_like']) + '°C'
-            humidity = str(res['main']['humidity']) + '%'
-            wind = str(res['wind']['speed']) + 'm/s'
-            clouds = str(res['clouds']['all']) + '%'
-            visibility = str(res['visibility'] / 1000) + ' km' if 'visibility' in res else 'no data'
-            embed.add_field(name='Weather', value=weather, inline=False)
-            embed.add_field(name='Temperature', value=temp, inline=True)
-            embed.add_field(name='Feels like', value=feels_temp, inline=True)
-            embed.add_field(name='Humidity', value=humidity, inline=True)
-            embed.add_field(name='Wind', value=wind, inline=True)
-            embed.add_field(name='Clouds', value=clouds, inline=True)
-            embed.add_field(name='Visibility', value=visibility, inline=True)
-            await ctx.send(embed=embed)
-        elif str(res['cod']) == '404':
-            msg = await ctx.send('City not found.')
-            await msg.add_reaction(basic_emoji.get('Sadge'))
-        elif str(res['cod']) == '401':
-            msg = await ctx.send('API key broke, have a nice day.')
-            await msg.add_reaction(basic_emoji.get('Si'))
-        else:
-            await ctx.send('City not found! ' + basic_emoji.get('Sadge') + ' (' + res['message'] + ')')
-
-    @commands.command(name='wolfram', aliases=['wa', 'wolframalpha', 'wolfram_alpha'], help="WolframAlpha query.")
-    @commands.guild_only()
-    async def wolfram(self, ctx, *args):
-        # No arguments -> exit
-        if not args:
-            await ctx.send("What? " + basic_emoji.get('Pepega') + basic_emoji.get('Clap'))
-            await ctx.message.add_reaction(basic_emoji.get('Si'))
-            return
-
-        # Parse query into url-friendly format (for example replaces spaces with '%2')
-        query = urllib.parse.quote_plus(' '.join(str(i) for i in args))
-        url = "http://api.wolframalpha.com/v1/simple?appid={0}&i={1}&background=36393f&foreground=white&timeout=30".format(WOLFRAM_APPID, query)
-
-        async with ctx.typing():
-            response = None
-            try:
-                response = requests.get(url)
-                response.raise_for_status()
-            except:
-                fail = await ctx.send("Bad response (status code: {0})".format(response.status_code))
-                await fail.add_reaction(basic_emoji.get('Si'))
-                return
-
-            # I want to send an image (generated by WolframAlpha), not embed a link (image would be regenerated if user clicked it + it would contain app_id)
-            # And because discord.File has to open the file, I first save the file, then embed it, then delete it...
-            # And to avoid overwriting during simultaneous calls, use the query's hash as the filename
-            filename = "tmp" + str(hash(query))
-            open(filename, "wb").write(response.content)
-            
-            await ctx.send(file=discord.File(filename, filename="result.png"))
-
-            os.remove(filename)
                     
 class Miscellaneous(commands.Cog):
     def __init__(self, bot):
@@ -939,7 +769,7 @@ class Miscellaneous(commands.Cog):
             fact = await ctx.send("Couldn't access wikipedia entry " + basic_emoji.get('Sadge'))
         elif not facts:
             await status.delete()
-            fact = await ctx.send("Didn't find any interesting fact on wikipedia.com/wiki/" + date.strftime('%B') + '_' + str(date.day) + ". Probably retarded formatting on this page for the 'events' section." + sad_emoji )
+            fact = await ctx.send("Didn't find any interesting fact on wikipedia.com/wiki/" + date.strftime('%B') + '_' + str(date.day) + ". Probably retarded formatting on this page for the 'events' section." + basic_emoji.get('Sadge'))
         else:
             await status.delete()
             fact = await ctx.send(msg + random.choice(facts))
@@ -1051,19 +881,11 @@ class Miscellaneous(commands.Cog):
                     result = post.text_comment
         
         await ctx.send(result[:2000])
-        
-class Test(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        
-    @commands.Cog.listener()
-    async def on_message(self, msg):
-        if "p." not in msg.content and random.randint(0,100) <= 4:
-            await msg.add_reaction(basic_emoji.get("Si"))
+
     
 bot.add_cog(Garfield(bot))
 bot.add_cog(Music(bot))
-bot.add_cog(Utility(bot))
 bot.add_cog(Miscellaneous(bot))
-bot.add_cog(Test(bot))
+bot.load_extension("cogs.utility_cog")
+bot.load_extension("cogs.test_cog")
 bot.run(DISCORD_TOKEN)
