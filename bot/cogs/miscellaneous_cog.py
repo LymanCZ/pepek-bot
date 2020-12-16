@@ -6,7 +6,6 @@ from typing import Union
 import basc_py4chan
 import discord
 import requests
-import wikipedia
 from bs4 import BeautifulSoup
 from discord.ext import commands
 
