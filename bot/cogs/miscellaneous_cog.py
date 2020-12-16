@@ -81,7 +81,7 @@ class Miscellaneous(commands.Cog):
                 await ctx.message.add_reaction(basic_emoji.get("Si"))
                 return
 
-        status = await ctx.send("Looking up an interesting fact...")
+        status = await ctx.send("Looking up an interesting fact... " + basic_emoji.get("docSpin"))
 
         # Try to find an interesting fact
         try:
