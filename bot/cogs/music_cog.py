@@ -160,6 +160,7 @@ async def youtubeURLextractor(ctx, arg):
 
 
 class Music(commands.Cog):
+    """Everything related to playing music"""
     def __init__(self, bot):
         self.bot = bot
 

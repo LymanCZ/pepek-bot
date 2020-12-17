@@ -50,6 +50,7 @@ async def daily_garfield(channel: discord.TextChannel):
 
 
 class Garfield(commands.Cog):
+    """Everything related to Garfield comics"""
     def __init__(self, bot):
         self.bot = bot
 

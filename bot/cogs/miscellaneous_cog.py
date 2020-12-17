@@ -16,6 +16,7 @@ from lib.wiki_fact import get_day_fact, WikipediaError
 
 
 class Miscellaneous(commands.Cog):
+    """Other interesting commands"""
     def __init__(self, bot):
         self.bot = bot
 

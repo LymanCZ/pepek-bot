@@ -65,6 +65,7 @@ def detect_text(url: str) -> str:
 
 
 class Utility(commands.Cog):
+    """Reading text from image, translation, weather, calculator and more"""
     def __init__(self, bot):
         self.bot = bot
 
