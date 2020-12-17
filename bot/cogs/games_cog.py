@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 from lib.connectX import Board
-from lib.discord_interface import add_choices_message, wait_for_choice
+from lib.discord_interface import add_choices_message, wait_for_choice, remove_choices
 from lib.emotes import basic_emoji
 from lib.player import Player
 
@@ -86,6 +86,7 @@ class Games(commands.Cog):
                 # No column chosen
                 if column < 0:
                     await board_msg.edit(content=board.to_string(yellow, red, empty) + "{0} timed out".format(player))
+                    await remove_choices(self.bot, board_msg)
                     return
 
             # Drop piece down the selected column
@@ -102,6 +103,8 @@ class Games(commands.Cog):
             await board_msg.edit(content=board.to_string(yellow, red, empty) + "{0} won!".format(player[board.winner]))
         else:
             await board_msg.edit(content=board.to_string(yellow, red, empty) + "It's a draw!")
+
+        await remove_choices(self.bot, board_msg)
 
 
 def setup(bot):
