@@ -2,6 +2,7 @@ asyncio==3.4.3
 BASC-py4chan==0.6.5 
 beautifulsoup4==4.9.1
 discord.py==1.5.1
+discord-pretty-help==1.2.0
 google-api-core==1.22.0
 google-api-python-client==1.10.0
 googleapis-common-protos==1.52.0
@@ -10,6 +11,7 @@ google-auth-httplib2==0.0.4
 google-cloud==0.34.0
 google-cloud-vision==1.0.0
 googletrans==3.1.0a0
+numpy==1.19.4
 requests==2.24.0
 setuptools==49.2.1
 wikipedia==1.4.0

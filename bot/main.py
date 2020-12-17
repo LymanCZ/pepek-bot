@@ -4,11 +4,14 @@ import random
 
 import discord
 from discord.ext import commands
+from pretty_help import PrettyHelp
 
 from cogs.garfield_cog import daily_garfield
 from lib.emotes import basic_emoji
 
 bot = commands.Bot(command_prefix='pp.')
+
+bot.help_command = PrettyHelp(color=discord.Color.dark_red())
 
 # Bot's token
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -49,7 +52,7 @@ async def on_ready():
     bot.loop.create_task(leave_voice())
 
     # Daily Garfield post
-    bot.loop.create_task(daily_garfield(bot.guilds[0].text_channels[0]))
+    bot.loop.create_task(daily_garfield(bot.guilds[1].text_channels[0]))
 
     # Activities
     bot.loop.create_task(status_changer())
@@ -78,8 +81,9 @@ async def on_command_error(ctx, error):
         raise error
 
 
-bot.load_extension("cogs.music_cog")
+bot.load_extension("cogs.games_cog")
 bot.load_extension("cogs.garfield_cog")
 bot.load_extension("cogs.miscellaneous_cog")
+bot.load_extension("cogs.music_cog")
 bot.load_extension("cogs.utility_cog")
 bot.run(DISCORD_TOKEN)
