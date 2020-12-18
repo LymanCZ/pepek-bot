@@ -48,7 +48,7 @@ async def wait_for_choice(bot: discord.ext.commands.Bot, user: discord.User, mes
 
         # Watch for reaction
         try:
-            payload: discord.RawReactionActionEvent = await bot.wait_for("raw_reaction_add", timeout=3600, check=check)
+            payload: discord.RawReactionActionEvent = await bot.wait_for("raw_reaction_add", timeout=300, check=check)
             choice = payload.emoji.name
             author_id = payload.user_id
 
