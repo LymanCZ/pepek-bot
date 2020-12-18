@@ -34,39 +34,48 @@ async def wait_for_choice(bot: discord.ext.commands.Bot, user: discord.User, mes
             Valid reaction -> 1 / 2 / 3 / ... (index of emoji in choices list + 1)
         """
 
+    number_emotes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "0️⃣"]
+
     # Checks if added reaction is the one we're waiting for
     def check(payload: discord.RawReactionActionEvent):
-        if payload.user_id == user.id and message.id == payload.message_id and payload.emoji.name in choices:
+        if message.id == payload.message_id and payload.emoji.name in number_emotes and payload.user_id != bot.user.id:
             return True
 
-    try:
+    choice = None
+    author_id = -1
+
+    while choice not in choices or author_id != user.id:
+
         # Watch for reaction
-        payload: discord.RawReactionActionEvent = await bot.wait_for("raw_reaction_add", timeout=120, check=check)
+        try:
+            payload: discord.RawReactionActionEvent = await bot.wait_for("raw_reaction_add", timeout=3600, check=check)
+            choice = payload.emoji.name
+            author_id = payload.user_id
+
+        # No reaction after timeout
+        except asyncio.TimeoutError:
+            return -1
 
         # Remove user's reaction
         try:
-            await message.remove_reaction(payload.emoji, discord.Object(id=payload.user_id))
+            await message.remove_reaction(payload.emoji.name, bot.get_user(author_id))
         except discord.errors.Forbidden:
             pass
 
-    # No reaction after timeout
-    except asyncio.TimeoutError:
-        return -1
-
-    if payload.emoji.name == "❌":
+    if choice == "❌":
         return 0
     else:
-        return choices.index(payload.emoji.name) + 1
+        # Return emote as the number it represents (1️⃣ represents 1, 0️⃣️ represents 10)
+        return choices.index(choice) + 1
 
 
-async def remove_choices(bot: discord.ext.commands.Bot, message: discord.Message) -> None:
-    """Remove all bot's number emotes from message"""
+async def remove_choices(message: discord.Message) -> None:
+    """Remove all number emotes from message"""
 
     number_emotes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "0️⃣"]
 
-    # Try every emote, ignoring exceptions
     for emote in number_emotes:
         try:
-            await message.remove_reaction(emote, bot.user)
+            await message.clear_reaction(emote)
         except (discord.HTTPException, discord.Forbidden, discord.NotFound):
             pass
