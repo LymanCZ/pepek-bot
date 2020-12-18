@@ -78,6 +78,12 @@ class Games(commands.Cog):
                 # Add numbers if not already present
                 if not reacts_added:
                     reacts_added = True
+                    try:
+                        await board_msg.clear_reactions()
+                    except discord.HTTPException:
+                        pass
+                    except discord.Forbidden:
+                        await ctx.send("I am missing permission to manage messages (cannot remove reactions) " + basic_emoji.get("forsenT"))
                     columns = await add_choices_message(board_msg, 7)
 
                 # Wait for human to choose a column
@@ -86,7 +92,7 @@ class Games(commands.Cog):
                 # No column chosen
                 if column < 0:
                     await board_msg.edit(content=board.to_string(yellow, red, empty) + "{0} timed out".format(player))
-                    await remove_choices(self.bot, board_msg)
+                    await remove_choices(board_msg)
                     return
 
             # Drop piece down the selected column
@@ -104,7 +110,7 @@ class Games(commands.Cog):
         else:
             await board_msg.edit(content=board.to_string(yellow, red, empty) + "It's a draw!")
 
-        await remove_choices(self.bot, board_msg)
+        await remove_choices(board_msg)
 
 
 def setup(bot):
