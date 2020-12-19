@@ -1,4 +1,5 @@
 import asyncio
+from typing import Union
 
 import discord
 
@@ -25,7 +26,7 @@ async def add_choices_message(message: discord.Message, num: int, cancellable: b
     return choices
 
 
-async def wait_for_choice(bot: discord.ext.commands.Bot, user: discord.User, message: discord.Message, choices: list) -> int:
+async def wait_for_choice(bot: discord.ext.commands.Bot, user: Union[discord.User, discord.Member], message: discord.Message, choices: list, cancellable: bool = False) -> int:
     """Wait for user to react with emote, then remove their reaction
 
         Example:
@@ -35,6 +36,10 @@ async def wait_for_choice(bot: discord.ext.commands.Bot, user: discord.User, mes
         """
 
     number_emotes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "0️⃣"]
+
+    if cancellable:
+        number_emotes.append("❌")
+        choices.append("❌")
 
     # Checks if added reaction is the one we're waiting for
     def check(payload: discord.RawReactionActionEvent):
@@ -72,7 +77,7 @@ async def wait_for_choice(bot: discord.ext.commands.Bot, user: discord.User, mes
 async def remove_choices(message: discord.Message) -> None:
     """Remove all number emotes from message"""
 
-    number_emotes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "0️⃣"]
+    number_emotes = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "0️⃣", "❌"]
 
     for emote in number_emotes:
         try:
