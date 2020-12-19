@@ -14,12 +14,13 @@ from lib.config import activities
 # Bot's token
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-bot = commands.Bot(command_prefix='p.')
+bot = commands.Bot(command_prefix="p.")
 bot.help_command = PrettyHelp(color=discord.Color.dark_red())
 
 
 async def status_changer():
     """Changes bot's activity every so often"""
+
     while True:
         try:
             await bot.change_presence(activity=random.choice(activities))
@@ -33,6 +34,7 @@ async def status_changer():
 
 async def leave_voice():
     """Disconnect from all voice channels"""
+
     for guild in bot.guilds:
         if guild.voice_client and guild.voice_client.is_connected():
             await guild.voice_client.disconnect()
@@ -42,6 +44,7 @@ async def leave_voice():
 async def on_ready():
     """Executed on startup"""
 
+    bot.load_extension("cogs.fun_cog")
     bot.load_extension("cogs.games_cog")
     bot.load_extension("cogs.garfield_cog")
     bot.load_extension("cogs.miscellaneous_cog")
