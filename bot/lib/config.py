@@ -1,5 +1,7 @@
 import os
 
+import discord
+
 
 # HTTP headers
 headers = {
@@ -39,3 +41,10 @@ ytdl_format_options = {
 ffmpeg_options = {
     "options": "-vn"
 }
+
+# Bot's discord activities
+activities = [
+    discord.Game(name="with křemík."),
+    discord.Activity(type=discord.ActivityType.listening, name="frequencies."),
+    discord.Activity(type=discord.ActivityType.watching, name="you.")
+]
