@@ -19,7 +19,7 @@ class Music(commands.Cog):
         self.bot = bot
         self.sessions = dict()
         for guild in self.bot.guilds:
-            self.sessions[guild.id] = Session(guild)
+            self.sessions[guild.id] = Session()
 
         # Load library to be able to transmit audio packets
         discord.opus.load_opus(ctypes.util.find_library("opus"))
@@ -137,7 +137,6 @@ class Music(commands.Cog):
     async def forceplay(self, ctx, *args):
         """Put song in front of queue"""
 
-        print("forceplay " + str(ctx.guild.id))
         session = self.sessions[ctx.guild.id]
 
         # No arguments -> exit
@@ -177,7 +176,6 @@ class Music(commands.Cog):
     async def clear(self, ctx):
         """Clear song queue"""
 
-        print("clear " + str(ctx.guild.id))
         session = self.sessions[ctx.guild.id]
 
         if not session.song_queue:

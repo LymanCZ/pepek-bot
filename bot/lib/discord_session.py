@@ -47,19 +47,16 @@ class Player(discord.PCMVolumeTransformer):
 class Session:
     """Class representing listening session (tied to guild)"""
 
-    _guild = None
-    _ytdlData = None
-
     vc = None
     song_queue = []
     song = ""
     repeat = False
 
-    def __init__(self, guild: discord.Guild):
-        self._guild = guild
-
-    def id(self) -> int:
-        return self._guild.id
+    def __init__(self):
+        self.vc = None
+        self.song_queue = []
+        self.song = ""
+        self.repeat = False
 
     def reset(self) -> None:
         """Restart session (clearing all variables)"""
