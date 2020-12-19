@@ -1,3 +1,4 @@
+import asyncio
 import time
 from typing import Union
 
@@ -65,7 +66,10 @@ class Games(commands.Cog):
                 await board_msg.edit(content=board.to_string(yellow, red, empty) + basic_emoji.get("docSpin") + " {0} on turn".format(player))
 
                 ts = time.time()
-                column = board.get_ai_move()
+
+                loop = self.bot.loop or asyncio.get_event_loop()
+                column = await loop.run_in_executor(None, lambda: board.get_ai_move(depth=6))
+
                 # If move calculated in under a second -> wait a little for a better impression
                 if time.time() - ts < 1:
                     time.sleep(0.8)
