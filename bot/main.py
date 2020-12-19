@@ -8,20 +8,14 @@ from pretty_help import PrettyHelp
 
 from cogs.garfield_cog import daily_garfield
 from lib.emotes import basic_emoji
+from lib.config import activities
 
-bot = commands.Bot(command_prefix='pp.')
-
-bot.help_command = PrettyHelp(color=discord.Color.dark_red())
 
 # Bot's token
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-# Bot's discord activities
-activities = [
-    discord.Game(name="with křemík."),
-    discord.Activity(type=discord.ActivityType.listening, name="frequencies."),
-    discord.Activity(type=discord.ActivityType.watching, name="you.")
-]
+bot = commands.Bot(command_prefix='pp.')
+bot.help_command = PrettyHelp(color=discord.Color.dark_red())
 
 
 async def status_changer():
@@ -48,14 +42,20 @@ async def leave_voice():
 async def on_ready():
     """Executed on startup"""
 
-    # Disconnect from all voice channels (if bot restarted, for example - that doesn't necessarily remove it from VC, have to do that manually)
-    bot.loop.create_task(leave_voice())
+    bot.load_extension("cogs.games_cog")
+    bot.load_extension("cogs.garfield_cog")
+    bot.load_extension("cogs.miscellaneous_cog")
+    bot.load_extension("cogs.utility_cog")
+    bot.load_extension("cogs.music_cog")
 
     # Daily Garfield post
     bot.loop.create_task(daily_garfield(bot.guilds[1].text_channels[0]))
 
     # Activities
     bot.loop.create_task(status_changer())
+
+    # Disconnect from all voice channels (if bot restarted, for example - that doesn't necessarily remove it from VC, have to do that manually)
+    bot.loop.create_task(leave_voice())
 
 
 @bot.event
@@ -81,9 +81,4 @@ async def on_command_error(ctx, error):
         raise error
 
 
-bot.load_extension("cogs.games_cog")
-bot.load_extension("cogs.garfield_cog")
-bot.load_extension("cogs.miscellaneous_cog")
-bot.load_extension("cogs.music_cog")
-bot.load_extension("cogs.utility_cog")
 bot.run(DISCORD_TOKEN)
