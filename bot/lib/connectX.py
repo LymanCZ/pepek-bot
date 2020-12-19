@@ -4,11 +4,13 @@ import random
 
 import numpy as np
 
+
 evaluation_matrix = None
 
 
 def create_evaluation_matrix(width, height, pieces):
     """Create 2D Gaussian mean distribution with regards to pieces needed (and width and height)"""
+
     # Source: https://www.w3resource.com/python-exercises/numpy/python-numpy-exercise-79.php
     # Modified and filled with magic variables to reflect amount of pieces
 
@@ -54,10 +56,12 @@ class Board:
 
     def __iter__(self):
         """Return generator of rows"""
+
         return (row for row in self._board)
 
     def __getitem__(self, key):
         """Overloaded [] operator (returns board row)"""
+
         return self._board[key]
 
     def to_string(self, p1: str = "", p2: str = "", empty: str = ""):
@@ -83,6 +87,7 @@ class Board:
 
     def column_valid(self, column):
         """Check if column exists and isn't filled yet"""
+
         # Out of range
         if not 0 <= column < self.width:
             return False, "Invalid column"
@@ -93,6 +98,7 @@ class Board:
 
     def column_not_full(self, column):
         """Check if column isn't filled yet"""
+
         if not -1 < column < self.width:
             raise ValueError(f"Column {column} out of range 0-{self.width - 1}")
         # Check only top row
@@ -100,6 +106,7 @@ class Board:
 
     def column_bottom(self, column):
         """Get lowest empty cell in column"""
+
         for row in range(self.height):
             if self[row][column] == 0:
                 return row
@@ -107,6 +114,7 @@ class Board:
 
     def drop_piece(self, column, piece):
         """Drop a piece to column"""
+
         if self.column_not_full(column):
             # Find bottom
             self[self.column_bottom(column)][column] = piece
@@ -119,10 +127,12 @@ class Board:
 
     def game_over(self):
         """Check if someone connected enough pieces or board was filled up"""
+
         return self.winner is not None or self.board_full()
 
     def board_full(self):
         """Check if board is filled"""
+
         # Check every cell in top row
         for i in range(self.width):
             if self[self.height - 1][i] == 0:
@@ -131,6 +141,7 @@ class Board:
 
     def was_winning_move(self, column, piece):
         """Check if dropped piece finished a long enough line"""
+
         # Row where piece is dropped
         row = self.column_bottom(column) - 1
 
@@ -197,6 +208,7 @@ class Board:
 
     def matrix_evaluation(self):
         """Uses an evaluation matrix - a 2D Gaussian mean distribution"""
+
         # Basically the more of my pieces near the center - the better
         # By playing towards the center I have better chances to find a combination of moves that forces a win
         # Less effective on huge boards with small number of winning pieces needed
@@ -219,6 +231,7 @@ class Board:
         :keyword center Index of center cell of which to count around
         :keyword piece Friendly piece
         """
+
         pieces, empty_spaces = 0, 0
 
         right = cells[center:]
@@ -244,6 +257,7 @@ class Board:
 
     def column_evaluation(self):
         """Sums up potential of every column"""
+
         potential = 0
         for col in range(self.width):
             if self.column_not_full(col):
@@ -272,6 +286,7 @@ class Board:
 
                 def eval_axis(piece, axis, center, length, coefficient):
                     """If there is space for pieces to finish a line, return coefficient, else 0"""
+
                     pieces, gaps = self.count_around_center(axis, center, piece)
                     if pieces == length and gaps >= self._winning_pieces - length:
                         return coefficient
@@ -298,10 +313,12 @@ class Board:
 
     def evaluate_board(self):
         """Evaluate board for AI player"""
+
         return self.column_evaluation() + self.matrix_evaluation() * 0.5
 
     def valid_columns(self):
         """Returns all non-full columns"""
+
         columns = []
         for i in range(self.width):
             if self.column_not_full(i):
@@ -310,6 +327,7 @@ class Board:
 
     def minimax(self, depth, alpha: int = -math.inf, beta: int = math.inf, maximize: bool = True):
         """Minimax algorithm - evaluate all possible moves some time into the future and choose optimal"""
+
         # If game finished
         if self.game_over():
             # And we won -> maximal score
@@ -369,8 +387,9 @@ class Board:
                     break  # Alpha cutoff (will never go this route)
             return value, column
 
-    def get_ai_move(self, player: int = 2):
+    def get_ai_move(self, player: int = 2, depth: int = 5):
         """Calculate a move to make as an AI opponent"""
+
         # If going first always choose middle (proven best option)
         board_empty = True
         for n in self[0]:
@@ -385,7 +404,7 @@ class Board:
             self._ai_piece, self._player_piece = self._player_piece, self._ai_piece
 
         # Run minimax algorithm (here's a great explanation https://www.youtube.com/watch?v=l-hh51ncgDI)
-        _, column = self.minimax(depth=5)
+        _, column = self.minimax(depth=depth)
 
         if player == 1:
             self._ai_piece, self._player_piece = self._player_piece, self._ai_piece
