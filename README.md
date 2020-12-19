@@ -9,6 +9,8 @@
 - `tomorrow` - Retrieve tomorrow's Garfield comic. Unless? 😳
 - `random` - Retrieve random Garfield comic plus a random fact about the day it came out.
 - `garf 1989 4 26` - Retrieve a Garfield comic given the date in the format `YEAR MONTH DAY`.
+### Games
+- `connect4` - Play Connect 4 against the bot or another user (by tagging them)
 #### Music
 - `play` - Join VC and play youtube video (and queue videos) - Either an URL or searches for video by title
 - `forceplay` - Adds video to the start of the queue (instead of the back)
