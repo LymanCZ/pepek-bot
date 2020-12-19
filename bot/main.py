@@ -14,7 +14,7 @@ from lib.config import activities
 # Bot's token
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-bot = commands.Bot(command_prefix='pp.')
+bot = commands.Bot(command_prefix='p.')
 bot.help_command = PrettyHelp(color=discord.Color.dark_red())
 
 
