@@ -65,11 +65,11 @@ class Board:
 
         return self._board[key]
 
-    def to_string(self, p1: str = "", p2: str = "", empty: str = ""):
+    def to_string(self, p1: str = "", p2: str = ""):
         """"Convert board to string"""
 
         # If special characters not specified, return as numpy's tostring()
-        if not p1 or not p2 or not empty:
+        if not p1 or not p2:
             return self._board.tostring()
 
         string = ""
@@ -78,7 +78,7 @@ class Board:
             string += "_" + "_".join([str(n) for n in row])
             string += "\n"
 
-        string = string.replace("_0", empty)
+        string = string.replace("_0", "⬛")
         string = string.replace("_1", p1)
         string = string.replace("_2", p2)
 
@@ -412,7 +412,7 @@ class Board:
 
         return column
 
-    def get_ai_move_mp(self, queue: Queue, player: int = 2, depth: int = 5):
+    def get_ai_move_mp(self, queue: Queue, player: int, depth: int):
         """Put result in queue (for multiprocessing)"""
 
         queue.put(self.get_ai_move(player, depth))
