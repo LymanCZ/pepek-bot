@@ -1,6 +1,7 @@
 import copy
 import math
 import random
+from multiprocessing.queues import Queue
 
 import numpy as np
 
@@ -410,3 +411,8 @@ class Board:
             self._ai_piece, self._player_piece = self._player_piece, self._ai_piece
 
         return column
+
+    def get_ai_move_mp(self, queue: Queue, player: int = 2, depth: int = 5):
+        """Put result in queue (for multiprocessing)"""
+
+        queue.put(self.get_ai_move(player, depth))

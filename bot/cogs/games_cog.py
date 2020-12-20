@@ -1,6 +1,4 @@
-import asyncio
-import time
-from threading import Thread
+from multiprocessing import Process, Queue
 from typing import Union
 
 import discord
@@ -66,7 +64,13 @@ class Games(commands.Cog):
                 # Update displayed board
                 await board_msg.edit(content=board.to_string(yellow, red, empty) + basic_emoji.get("docSpin") + " {0} on turn".format(player))
 
-                column = board.get_ai_move(depth=6)
+                # Run AI as new process (CPU heavy)
+                queue = Queue()
+                p = Process(target=board.get_ai_move_mp, args=(queue, 7))
+                p.start()
+                p.join()
+
+                column = queue.get()
 
             # If it's human's turn
             else:
