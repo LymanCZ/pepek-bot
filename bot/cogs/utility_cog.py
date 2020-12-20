@@ -11,7 +11,7 @@ from discord.ext import commands
 from google.cloud import vision
 from google.oauth2 import service_account
 
-from lib import emoji_locale
+from lib.emoji import code_to_country
 from lib.emotes import basic_emoji
 
 # Openweathermap (weather)
@@ -124,9 +124,9 @@ class Utility(commands.Cog):
 
         # Using .lower() because for example chinese-simplified is 'zh-cn', but result.src returns 'zh-CN' (so dumb)
         header = "Translated from `{0}` {1} to `{2}` {3}".format(googletrans.LANGUAGES.get(result.src.lower()),
-                                                                 emoji_locale.code_to_country(result.src.lower()),
+                                                                 code_to_country(result.src.lower()),
                                                                  googletrans.LANGUAGES.get(result.dest.lower()),
-                                                                 emoji_locale.code_to_country(result.dest.lower()))
+                                                                 code_to_country(result.dest.lower()))
 
         # Split into parts in case of very long translation
         first_iter = True

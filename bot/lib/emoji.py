@@ -1,3 +1,8 @@
+import re
+
+import emojis
+
+
 KNOWN_CODES = {
     "af": "ZA",
     "agq": "CM",
@@ -174,3 +179,23 @@ def code_to_country(code: str) -> str:
 
     else:
         return ""
+
+
+def extract_emoji(text: str) -> list:
+    """Return all Unicode emojis contained in string"""
+
+    # Change Unicode character to :emoji:
+    text = emojis.decode(text)
+
+    # Match all of them
+    possible_emojis = re.findall(r"(:[^:]*:)", text)
+
+    found_emoji = []
+
+    # Might have matched even non-emoji (if text contained ':not and emoji:' for example)
+    for emoji in possible_emojis:
+        # Add only actual emojis
+        if emojis.db.get_emoji_by_alias(emoji[1:-1]) is not None:
+            found_emoji.append(emojis.encode(emoji))
+
+    return found_emoji
