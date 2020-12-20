@@ -68,10 +68,17 @@ class Games(commands.Cog):
             await ctx.send("Too many emotes specified " + basic_emoji.get("Pepega"))
 
     @commands.command(name="connect4", aliases=["connect", "connectX"], help="Play a game of Connect 4")
-    async def connect4(self, ctx, user: Union[None, discord.User], emote: str = ""):
+    async def connect4(self, ctx, arg1: Union[discord.User, str, None], arg2: Union[discord.User, str, None]):
         """Connect 4 against another human or AI"""
 
         # Parsing input
+        if isinstance(arg1, str):
+            user = arg2
+            emote = arg1
+        else:
+            user = arg1
+            emote = arg2
+
         # Tagging a user creates User (or Member) class
         if isinstance(user, discord.User):
             # If user is a bot -> bot is unlikely to be able to play connect4
