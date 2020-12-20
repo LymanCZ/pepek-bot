@@ -52,7 +52,7 @@ async def on_ready():
     bot.load_extension("cogs.music_cog")
 
     # Daily Garfield post
-    bot.loop.create_task(daily_garfield(bot.guilds[1].text_channels[0]))
+    bot.loop.create_task(daily_garfield(bot.guilds[0].text_channels[0]))
 
     # Activities
     bot.loop.create_task(status_changer())
