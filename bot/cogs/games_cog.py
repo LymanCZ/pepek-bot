@@ -1,5 +1,6 @@
 import re
 from multiprocessing import Process, Queue
+from typing import Union
 
 import discord
 from discord.ext import commands
@@ -67,7 +68,7 @@ class Games(commands.Cog):
             await ctx.send("Too many emotes specified " + basic_emoji.get("Pepega"))
 
     @commands.command(name="connect4", aliases=["connect", "connectX"], help="Play a game of Connect 4")
-    async def connect4(self, ctx, emote: str = "", user: discord.User = None):
+    async def connect4(self, ctx, user: Union[None, discord.User], emote: str = ""):
         """Connect 4 against another human or AI"""
 
         # Parsing input
