@@ -5,10 +5,11 @@ from typing import Union
 import discord
 from discord.ext import commands
 
-from lib.connectX import Board
+from lib.connectX import Board as ConnectX
 from lib.discord_interface import add_choices_message, wait_for_choice, remove_choices
 from lib.emoji import extract_emoji
 from lib.emotes import basic_emoji
+from lib.minesweeper import Minesweeper
 from lib.player import Player
 
 
@@ -103,7 +104,7 @@ class Games(commands.Cog):
             await self.set_icon(ctx, emote)
 
         # Game setup
-        board = Board(7, 6, 4)
+        board = ConnectX(7, 6, 4)
         player = Player(player1=ctx.message.author, player2=user, ai=ai)
         player.shuffle()
 
@@ -173,6 +174,21 @@ class Games(commands.Cog):
             await board_msg.edit(content=board.to_string(yellow, red) + "It's a draw!")
 
         await remove_choices(board_msg)
+
+    @commands.command(name="minesweeper", aliases=["mines"], help="Generate a minefield")
+    async def minesweeper(self, ctx, bombs: int = 25):
+        """Displays a minefield"""
+
+        if bombs > 99:
+            await ctx.send("That's too many bombs.")
+            return
+        elif bombs < 1:
+            await ctx.send("That wouldn't be minesweeper, just floorsweeper.")
+            return
+
+        field = Minesweeper(width=10, height=10, bombs=bombs)
+
+        await ctx.send(field.to_string(spoiler=True))
 
 
 def setup(bot):
