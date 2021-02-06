@@ -19,7 +19,7 @@ class Miscellaneous(commands.Cog):
     async def ping(self, ctx):
         """Displays time delta between Discord message and command invocation"""
 
-        ms = (datetime.datetime.utcnow() - ctx.message.created_at).total_seconds() * 1000
+        ms = (datetime.utcnow() - ctx.message.created_at).total_seconds() * 1000
         await ctx.send(basic_emoji.get("Pepega") + " 🏓 Pong! `{0}ms`".format(int(ms)))
 
     @commands.command(name="roll", help="Generate a random number between 1 and 100 by default.")
@@ -91,7 +91,7 @@ class Miscellaneous(commands.Cog):
 
         time = datetime.utcfromtimestamp(unix).strftime("%Y-%m-%d %H:%M:%S")
 
-        await ctx.send("{0} was created at {1}".format(msg, time))
+        await ctx.send("{0} was created at {1} UTC".format(msg, time))
 
 
 def setup(bot):
