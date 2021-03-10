@@ -1,4 +1,5 @@
 import os
+import base64
 
 import discord
 
@@ -10,6 +11,7 @@ headers = {
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "3600",
     "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
+    # "Authorization": base64.b64encode(bytes("Basic username:password", "utf-8"))
 }
 
 # Log-in for youtube to download age-restricted videos ~this still doesn't solve the issue, I don't understand why~
@@ -48,3 +50,5 @@ activities = [
     discord.Activity(type=discord.ActivityType.listening, name="frequencies."),
     discord.Activity(type=discord.ActivityType.watching, name="you.")
 ]
+
+geckodriver_path = os.getenv("GECKODRIVER_PATH")

@@ -31,8 +31,8 @@ class Player:
 
         if key == 1:
             return self._player1.mention
-        if key == 2 and self._ai:
-            return "Pepek"
+        # if key == 2 and self._ai:
+            # return "Pepek"
         if key == 2:
             return self._player2.mention
 

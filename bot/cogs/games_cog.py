@@ -22,6 +22,9 @@ class Games(commands.Cog):
     def user_icons(self, user1: discord.User, user2: discord.User):
         """Return currently set user icons or default if not set"""
 
+        if user1.id == user2.id:
+            return "🟡", "🔴"
+
         if user1.id in self.user_icon:
             yellow = self.user_icon[user1.id]
         else:
@@ -100,16 +103,26 @@ class Games(commands.Cog):
             ai = True
             user = self.bot.user
 
-        if emote:
+        # Bot vs Bot
+        bvb = False
+        if isinstance(user, discord.ClientUser) and isinstance(emote, discord.ClientUser):
+            bvb = True
+
+        elif isinstance(emote, str) and len(emote) != 0:
             await self.set_icon(ctx, emote)
 
         # Game setup
         board = ConnectX(7, 6, 4)
-        player = Player(player1=ctx.message.author, player2=user, ai=ai)
+        columns = [None for _ in range(10)]
+        player1 = ctx.message.author
+        player2 = user
+        if bvb:
+            player1 = emote
+        player = Player(player1=player1, player2=player2, ai=ai)
         player.shuffle()
 
         # Message containing game
-        yellow, red = self.user_icons(ctx.message.author, user)
+        yellow, red = self.user_icons(player1, player2)
         board_msg = await ctx.send(board.to_string(yellow, red) + "{0} on turn".format(player))
 
         # Add numbers on first turn
@@ -117,14 +130,14 @@ class Games(commands.Cog):
 
         while not board.game_over():
             # If it's AI's turn
-            if player.on_turn() == 2 and ai:
+            if player.on_turn() == 2 and ai or bvb:
                 # Update displayed board
-                yellow, red = self.user_icons(ctx.message.author, user)
+                yellow, red = self.user_icons(player1, player2)
                 await board_msg.edit(content=board.to_string(yellow, red) + basic_emoji.get("docSpin") + " {0} on turn".format(player))
 
                 # Run AI as new process (CPU heavy)
                 queue = Queue()
-                p = Process(target=board.get_ai_move_mp, args=(queue, 2, 6))
+                p = Process(target=board.get_ai_move_mp, args=(queue, 2, 2))
                 p.start()
                 p.join()
 
@@ -133,7 +146,7 @@ class Games(commands.Cog):
             # If it's human's turn
             else:
                 # Update displayed board
-                yellow, red = self.user_icons(ctx.message.author, user)
+                yellow, red = self.user_icons(player1, player2)
                 await board_msg.edit(content=board.to_string(yellow, red) + "{0} on turn".format(player))
 
                 # Add numbers if not already present
@@ -141,10 +154,10 @@ class Games(commands.Cog):
                     reacts_added = True
                     try:
                         await board_msg.clear_reactions()
-                    except discord.HTTPException:
-                        pass
                     except discord.Forbidden:
                         await ctx.send("I am missing permission to manage messages (cannot remove reactions) " + basic_emoji.get("forsenT"))
+                    except discord.HTTPException:
+                        pass
                     columns = await add_choices_message(board_msg, 7)
 
                 # Wait for human to choose a column
@@ -152,13 +165,14 @@ class Games(commands.Cog):
 
                 # No column chosen
                 if column < 0:
-                    yellow, red = self.user_icons(ctx.message.author, user)
+                    yellow, red = self.user_icons(player1, player2)
                     await board_msg.edit(content=board.to_string(yellow, red) + "{0} timed out".format(player))
                     await remove_choices(board_msg)
                     return
 
             # Drop piece down the selected column
             board.drop_piece(column, player.on_turn())
+            board._move_history.append(column)
 
             # If it filled up the column, invalidate that column (can't be played again)
             if not board.column_not_full(column):
@@ -167,7 +181,7 @@ class Games(commands.Cog):
             player.next()
 
         # Game ended -> display result
-        yellow, red = self.user_icons(ctx.message.author, user)
+        yellow, red = self.user_icons(player1, player2)
         if board.winner is not None:
             await board_msg.edit(content=board.to_string(yellow, red) + "{0} won!".format(player[board.winner]))
         else:
