@@ -9,10 +9,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
-from lib.config import geckodriver_path
+from lib.config import firefox_bin, geckodriver_path
 
 evaluation_matrix = None
 options = Options()
+options.binary_location = firefox_bin
 options.headless = True
 driver = webdriver.Firefox(options=options, executable_path=geckodriver_path)
 

@@ -52,3 +52,4 @@ activities = [
 ]
 
 geckodriver_path = os.getenv("GECKODRIVER_PATH")
+firefox_bin = os.getenv("FIREFOX_BIN")
