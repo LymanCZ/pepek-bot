@@ -137,7 +137,7 @@ class Games(commands.Cog):
 
                 # Run AI as new process (CPU heavy)
                 queue = Queue()
-                p = Process(target=board.get_ai_move_mp, args=(queue, 2, 2))
+                p = Process(target=board.get_ai_move_mp, args=(queue, 1, player.on_turn()))
                 p.start()
                 p.join()
 

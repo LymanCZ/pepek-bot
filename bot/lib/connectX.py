@@ -15,7 +15,8 @@ evaluation_matrix = None
 options = Options()
 options.binary_location = firefox_bin
 options.headless = True
-driver = webdriver.Firefox(options=options, executable_path=geckodriver_path)
+# Broken on Heroku
+# driver = webdriver.Firefox(options=options, executable_path=geckodriver_path)
 
 
 def create_evaluation_matrix(width, height, pieces):
