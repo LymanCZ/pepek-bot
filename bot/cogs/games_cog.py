@@ -158,15 +158,16 @@ class Games(commands.Cog):
                         await ctx.send("I am missing permission to manage messages (cannot remove reactions) " + basic_emoji.get("forsenT"))
                     except discord.HTTPException:
                         pass
-                    columns = await add_choices_message(board_msg, 7)
+                    columns = await add_choices_message(board_msg, 7, cancellable=True)
 
                 # Wait for human to choose a column
-                column = await wait_for_choice(self.bot, player.get_user_on_turn(), board_msg, columns) - 1
+                column = await wait_for_choice(self.bot, player.get_user_on_turn(), board_msg, columns, cancellable=True) - 1
 
-                # No column chosen
+                # No column chosen or player forfeited
                 if column < 0:
                     yellow, red = self.user_icons(player1, player2)
-                    await board_msg.edit(content=board.to_string(yellow, red) + "{0} timed out".format(player))
+                    status = "forfeited" if column == -1 else "timed out"
+                    await board_msg.edit(content=board.to_string(yellow, red) + "{0} {1}".format(player, status))
                     await remove_choices(board_msg)
                     return
 
