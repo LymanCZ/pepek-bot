@@ -122,9 +122,9 @@ class Fun(commands.Cog):
             for segment in wrap(str(row.text).replace("\n\n", "\n"), 1990):
                 await ctx.send(segment)
                 
-    @commands.command(name="cah", aliases=["Cyanide&Happiness"], help="Get a Cyanide & Happiness daily strip")
+    @commands.command(name="cah", aliases=["Cyanide&Happiness"], help="Get today's Cyanide & Happiness comic strip")
     async def cah(self, ctx):
-        """Cyanide & Happiness daily strip"""
+        """Display today's Cyanide&Happiness comic strip"""
 
         url = "https://explosm.net/"
 
@@ -137,13 +137,13 @@ class Fun(commands.Cog):
             await fail.add_reaction(basic_emoji.get("Si"))
             return
 
-        # Look for a strip
+        # Look for comic
         soup = BeautifulSoup(response.content, "html.parser")
-        cah_comic_link = soup.find(id='main-comic')['src'][2:].split('?', 1)[0]
+        cah_comic_link = soup.find(id="main-comic")["src"][2:].split('?', 1)[0]
 
         # If element not found
         if not cah_comic_link:
-            fail = await ctx.send("Daily strip not found on {0}".format(url))
+            fail = await ctx.send("Comic not found on {0}".format(url))
             await fail.add_reaction(basic_emoji.get("Si"))
             return
         
