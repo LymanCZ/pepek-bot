@@ -139,7 +139,8 @@ class Fun(commands.Cog):
 
         # Look for comic
         soup = BeautifulSoup(response.content, "html.parser")
-        cah_comic_link = soup.find(id="main-comic")["src"][2:].split('?', 1)[0]
+        cah_comic_link = 'http://' + soup.find(id='main-comic')['src'][2:].split('?', 1)[0]
+
 
         # If element not found
         if not cah_comic_link:
