@@ -121,6 +121,33 @@ class Fun(commands.Cog):
             # Send string with empty lines removed (split into smaller parts in case it is >2000 characters long)
             for segment in wrap(str(row.text).replace("\n\n", "\n"), 1990):
                 await ctx.send(segment)
+                
+    @commands.command(name="cah", aliases=["Cyanide&Happiness"], help="Get today's Cyanide & Happiness comic strip")
+    async def cah(self, ctx):
+        """Display today's Cyanide&Happiness comic strip"""
+
+        url = "https://explosm.net/"
+
+        # Attempt to download webpage
+        try:
+            response = requests.get(url, headers)
+            response.raise_for_status()
+        except requests.HTTPError:
+            fail = await ctx.send("Bad response (status code {0}) from {1})".format(response.status_code, url))
+            await fail.add_reaction(basic_emoji.get("Si"))
+            return
+
+        # Look for comic
+        soup = BeautifulSoup(response.content, "html.parser")
+        cah_comic_link = soup.find(id="main-comic")["src"][2:].split('?', 1)[0]
+
+        # If element not found
+        if not cah_comic_link:
+            fail = await ctx.send("Comic not found on {0}".format(url))
+            await fail.add_reaction(basic_emoji.get("Si"))
+            return
+        
+        await ctx.send(cah_comic_link)
 
     @commands.command(name="chan", aliases=["4chan"], help="Get a random 4chan/4channel post.")
     async def chan(self, ctx, board: str = "", arg: str = ""):
