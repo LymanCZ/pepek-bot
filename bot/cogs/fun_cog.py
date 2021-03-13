@@ -7,7 +7,6 @@ import basc_py4chan
 import discord
 import requests
 from bs4 import BeautifulSoup
-from datetime import date
 from discord.ext import commands
 
 from lib.config import headers
@@ -126,8 +125,7 @@ class Fun(commands.Cog):
     @commands.command(name="cah", aliases=["Cyanide&Happiness"], help="Get today's Cyanide & Happiness comic strip")
     async def cah(self, ctx, arg: str = ""):
         """Display today's Cyanide&Happiness comic strip"""
-        
-        
+
         url = "https://explosm.net/comics/random" if arg.lower() == "random" else "https://explosm.net/"
 
         # Attempt to download webpage
@@ -143,15 +141,13 @@ class Fun(commands.Cog):
         soup = BeautifulSoup(response.content, "html.parser")
         cah_comic_link = "https:" + soup.find(id="main-comic")["src"].split('?', 1)[0]
 
-
         # If element not found
         if not cah_comic_link:
             fail = await ctx.send("Comic not found on {0}".format(url))
             await fail.add_reaction(basic_emoji.get("Si"))
             return
-        
-        await ctx.send(cah_comic_link)
 
+        await ctx.send(cah_comic_link)
 
     @commands.command(name="chan", aliases=["4chan"], help="Get a random 4chan/4channel post.")
     async def chan(self, ctx, board: str = "", arg: str = ""):
