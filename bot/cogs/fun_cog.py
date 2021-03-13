@@ -124,10 +124,12 @@ class Fun(commands.Cog):
                 await ctx.send(segment)
                 
     @commands.command(name="cah", aliases=["Cyanide&Happiness"], help="Get today's Cyanide & Happiness comic strip")
-    async def cah(self, ctx):
+    async def cah(self, ctx, arg: str = ""):
         """Display today's Cyanide&Happiness comic strip"""
-
-        url = "https://explosm.net/"
+        
+        d0 = date(2005, 1, 27)
+        d1 = date.today()
+        url = f"https://explosm.net/comics/{random.randint(39, (d1 - d0).days - 73)}" if arg.lower() == "random" else "https://explosm.net/"
 
         # Attempt to download webpage
         try:
@@ -150,42 +152,6 @@ class Fun(commands.Cog):
             return
         
         await ctx.send(cah_comic_link)
-        
-    @commands.command(name="cahRandom", aliases=["Cyanide&HappinessRandom"], help="Get a random Cyanide & Happiness comic strip")
-    async def cahRandom(self, ctx):
-        """Display a random Cyanide&Happiness comic strip"""
-        
-        url = "https://explosm.net/"
-        
-        # Attempt to download webpage
-        try:
-            response = requests.get(url, headers)
-            response.raise_for_status()
-        except requests.HTTPError:
-            fail = await ctx.send("Bad response (status code {0}) from {1})".format(response.status_code, url))
-            await fail.add_reaction(basic_emoji.get("Si"))
-            return
-        
-        #Generate Random ComicNo
-        d0 = date(2005, 1, 27)
-        d1 = date.today()
-        randomizer = random.randint(39, (d1 - d0).days - 73)
-        
-        #Check if ComicNo is valid ...
-        source = requests.get('https://explosm.net/comics/' + str('randomizer')).text
-        soup = BeautifulSoup(source, 'html.parser')
-        header = soup.body
-        
-        #If not, then ... just generate new ComicNo ?
-        while header is None:
-            randomizer = random.randint(39, (d1 - d0).days - 73)
-            source = requests.get('https://explosm.net/comics/' + str(randomizer)).text
-            soup = BeautifulSoup(source, 'html.parser')
-            header = soup.body
-        
-        #Download valid ComicNo
-        cah_comic_random = 'https:' + soup.find(id='main-comic')['src'].split('?', 1)[0]
-        await ctx.send(cah_comic_random)
 
 
     @commands.command(name="chan", aliases=["4chan"], help="Get a random 4chan/4channel post.")
