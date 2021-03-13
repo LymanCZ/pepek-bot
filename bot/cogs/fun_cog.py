@@ -7,6 +7,7 @@ import basc_py4chan
 import discord
 import requests
 from bs4 import BeautifulSoup
+from datetime import date
 from discord.ext import commands
 
 from lib.config import headers
@@ -123,10 +124,12 @@ class Fun(commands.Cog):
                 await ctx.send(segment)
                 
     @commands.command(name="cah", aliases=["Cyanide&Happiness"], help="Get today's Cyanide & Happiness comic strip")
-    async def cah(self, ctx):
+    async def cah(self, ctx, arg: str = ""):
         """Display today's Cyanide&Happiness comic strip"""
-
-        url = "https://explosm.net/"
+        
+        d0 = date(2005, 1, 27)
+        d1 = date.today()
+        url = f"https://explosm.net/comics/{random.randint(39, (d1 - d0).days - 73)}" if arg.lower() == "random" else "https://explosm.net/"
 
         # Attempt to download webpage
         try:
@@ -149,6 +152,7 @@ class Fun(commands.Cog):
             return
         
         await ctx.send(cah_comic_link)
+
 
     @commands.command(name="chan", aliases=["4chan"], help="Get a random 4chan/4channel post.")
     async def chan(self, ctx, board: str = "", arg: str = ""):
