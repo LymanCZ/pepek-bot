@@ -127,8 +127,7 @@ class Fun(commands.Cog):
     async def cah(self, ctx, arg: str = ""):
         """Display today's Cyanide&Happiness comic strip"""
         
-        d0 = date(2005, 1, 27)
-        d1 = date.today()
+        
         url = "https://explosm.net/comics/random" if arg.lower() == "random" else "https://explosm.net/"
 
         # Attempt to download webpage
