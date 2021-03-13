@@ -129,7 +129,7 @@ class Fun(commands.Cog):
         
         d0 = date(2005, 1, 27)
         d1 = date.today()
-        url = f"https://explosm.net/comics/{random.randint(39, (d1 - d0).days - 73)}" if arg.lower() == "random" else "https://explosm.net/"
+        url = "https://explosm.net/comics/random" if arg.lower() == "random" else "https://explosm.net/"
 
         # Attempt to download webpage
         try:
