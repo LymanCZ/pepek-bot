@@ -11,6 +11,9 @@ from lib.garfield_strip import garfield_strip, GarfieldError
 from lib.wiki_fact import get_day_fact, WikipediaError
 
 
+seven_AM_CET_in_UTC = 5
+
+
 async def verbose_garfield(ctx, date) -> None:
     """Send a Garfield strip, with status notification"""
 
@@ -34,7 +37,7 @@ def next_garfield() -> datetime.timedelta:
     tomorrow = now + datetime.timedelta(days=1)
 
     # TODO: Add summer/wintertime offset
-    return datetime.datetime.combine(tomorrow, datetime.time.min) - now + datetime.timedelta(hours=6, minutes=7)
+    return datetime.datetime.combine(tomorrow, datetime.time.min) - now + datetime.timedelta(hours=seven_AM_CET_in_UTC, minutes=7)
 
 
 async def daily_garfield(channel: discord.TextChannel):
@@ -62,8 +65,8 @@ class Garfield(commands.Cog):
 
         # If today's comic isn't out yet
         # TODO: Add summer/wintertime offset
-        if now.hour < 5 or (now.hour == 5 and now.minute < 7):
-            release = datetime.datetime(now.year, now.month, now.day, 5, 7, 0, 0)
+        if now.hour < seven_AM_CET_in_UTC or (now.hour == seven_AM_CET_in_UTC and now.minute < 7):
+            release = datetime.datetime(now.year, now.month, now.day, seven_AM_CET_in_UTC, 7, 0, 0)
             delta = (release - now)
             hours = delta.seconds // 3600 % 24
             minutes = delta.seconds // 60 % 60
