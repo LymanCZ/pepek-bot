@@ -96,7 +96,7 @@ class Garfield(commands.Cog):
         # If next garfield actually comes out today, simply add 24 hours for tomorrow's
         now = datetime.datetime.utcnow()
         # TODO: Add summer/wintertime offset
-        if now.hour < 6 or (now.hour == 6 and now.minute < 7):
+        if now.hour < seven_AM_CET_in_UTC or (now.hour == seven_AM_CET_in_UTC and now.minute < 7):
             hours += 24
 
         await ctx.message.add_reaction(basic_emoji.get("Si"))
