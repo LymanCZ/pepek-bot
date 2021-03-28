@@ -62,8 +62,8 @@ class Garfield(commands.Cog):
 
         # If today's comic isn't out yet
         # TODO: Add summer/wintertime offset
-        if now.hour < 6 or (now.hour == 6 and now.minute < 7):
-            release = datetime.datetime(now.year, now.month, now.day, 6, 7, 0, 0)
+        if now.hour < 5 or (now.hour == 5 and now.minute < 7):
+            release = datetime.datetime(now.year, now.month, now.day, 5, 7, 0, 0)
             delta = (release - now)
             hours = delta.seconds // 3600 % 24
             minutes = delta.seconds // 60 % 60
