@@ -317,12 +317,19 @@ class Board:
         return self.column_evaluation() + self.matrix_evaluation() * 0.5
 
     def valid_columns(self):
-        """Returns all non-full columns"""
+        """Returns all non-full columns ORDERED around center (move exploration optimisation)"""
 
         columns = []
-        for i in range(self.width):
-            if self.column_not_full(i):
-                columns.append(i)
+        center = self.width // 2
+
+        if self.column_not_full(center):
+            columns.append(center)
+        for i in range(1, self.width // 2 + 1):
+            if self.column_not_full(center + i):
+                columns.append(center + i)
+            if self.column_not_full(center - i):
+                columns.append(center - i)
+
         return columns
 
     def minimax(self, depth, alpha: int = -math.inf, beta: int = math.inf, maximize: bool = True):
@@ -346,12 +353,11 @@ class Board:
 
         # Never empty (if empty -> game ended, which is caught in the first if statement)
         valid_columns = self.valid_columns()
-        random.shuffle(valid_columns)
 
         # If maximizing
         if maximize:
             value = -math.inf
-            column = random.choice(valid_columns)
+            column = valid_columns[0]
             # Drop our piece in every column to see how it plays out
             for i in valid_columns:
                 new_board = copy.deepcopy(self)
@@ -371,7 +377,7 @@ class Board:
         # If minimizing
         else:
             value = math.inf
-            column = random.choice(valid_columns)
+            column = valid_columns[0]
             # Drop enemy piece in every column to see how it plays out
             for i in valid_columns:
                 new_board = copy.deepcopy(self)
@@ -387,7 +393,7 @@ class Board:
                     break  # Alpha cutoff (will never go this route)
             return value, column
 
-    def get_ai_move(self, player: int = 2, depth: int = 5):
+    def get_ai_move(self, player: int = 2, depth: int = 6):
         """Calculate a move to make as an AI opponent"""
 
         # If going first always choose middle (proven best option)
