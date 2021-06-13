@@ -44,6 +44,7 @@ def detect_text(url: str) -> str:
 
     # Invalid URL provided
     if response.error.message:
+        print(response.error.message)
         raise ContentError("That's not an image? {0}{1}\n{2}".format(basic_emoji.get("Pepega"), basic_emoji.get("Clap"), basic_emoji.get("forsenSmug")))
 
     # Let VisionAI do its thing
