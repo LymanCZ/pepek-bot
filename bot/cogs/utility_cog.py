@@ -1,5 +1,6 @@
 import io
 import json
+import mimetypes
 import os
 import urllib
 from textwrap import wrap
@@ -8,7 +9,7 @@ import discord
 import googletrans
 import requests
 from discord.ext import commands
-from google.cloud import vision
+from google.cloud import vision_v1
 from google.oauth2 import service_account
 
 from lib.emoji import code_to_country
@@ -21,7 +22,7 @@ WOLFRAM_APPID = os.getenv("WOLFRAM_APPID")
 # Google cloud APIs (VisionAI - text OCR) - it's in JSON, instead of writing to file just parsing using json library
 GOOGLE_CLOUD_CREDENTIALS = service_account.Credentials.from_service_account_info(json.loads(os.getenv("GOOGLE_CLIENT_SECRETS")))
 # Used to read text from image
-google_vision = vision.ImageAnnotatorClient(credentials=GOOGLE_CLOUD_CREDENTIALS)
+google_vision = vision_v1.ImageAnnotatorClient(credentials=GOOGLE_CLOUD_CREDENTIALS)
 # Used to translate text
 translator = googletrans.Translator()
 
@@ -37,18 +38,23 @@ class ContentError(Exception):
 def detect_text(url: str) -> str:
     """Uses Google Cloud VisionAI"""
 
-    # Convert data to image
-    image = vision.Image()
-    image.source.image_uri = url
-    response = google_vision.text_detection(image=image)
-
-    # Invalid URL provided
-    if response.error.message:
-        print(response.error.message)
+    # Check if link is an image
+    mimetype, encoding = mimetypes.guess_type(url)
+    if not mimetype or not mimetype.startswith("image"):
         raise ContentError("That's not an image? {0}{1}\n{2}".format(basic_emoji.get("Pepega"), basic_emoji.get("Clap"), basic_emoji.get("forsenSmug")))
 
-    # Let VisionAI do its thing
-    texts = response.text_annotations
+    # Download image
+    try:
+        response = requests.get(url)
+        image_bytes = io.BytesIO(response.content)
+        image = vision_v1.types.Image(content=image_bytes.read())
+
+    except requests.exceptions.MissingSchema:
+        raise ContentError("That's not an image? {0}{1}\n{2}".format(basic_emoji.get("Pepega"), basic_emoji.get("Clap"), basic_emoji.get("forsenSmug")))
+
+    # Read image
+    cloud_response = google_vision.text_detection(image=image)
+    texts = cloud_response.text_annotations
 
     # Couldn't read anything
     if not texts:
