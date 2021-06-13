@@ -324,11 +324,15 @@ class Board:
 
         if self.column_not_full(center):
             columns.append(center)
+
         for i in range(1, self.width // 2 + 1):
+            layer = []
             if self.column_not_full(center + i):
-                columns.append(center + i)
+                layer.append(center + i)
             if self.column_not_full(center - i):
-                columns.append(center - i)
+                layer.append(center - i)
+            random.shuffle(layer)
+            columns += layer
 
         return columns
 
@@ -421,6 +425,9 @@ class Board:
         """Put result in queue (for multiprocessing)"""
 
         if setting == 1:
-            queue.put(self.get_ai_move(player, depth))
+            if random.choice([False, True, False]):
+                queue.put(self.get_ai_move(player, depth + 1))
+            else:
+                queue.put(self.get_ai_move(player, depth))
         else:
             queue.put(random.choice(self.valid_columns()))
