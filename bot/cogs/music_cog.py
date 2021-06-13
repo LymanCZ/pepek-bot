@@ -204,11 +204,11 @@ class Music(commands.Cog):
         session = self.sessions[ctx.guild.id]
 
         if session.vc.pause():
-            await ctx.send(basic_emoji.get("residentCD") + " Paused " + basic_emoji.get("Okayga"))
-
-        else:
             msg = await ctx.send("Nothing is playing.")
             await msg.add_reaction(basic_emoji.get("Si"))
+
+        else:
+            await ctx.send(basic_emoji.get("residentCD") + " Paused " + basic_emoji.get("Okayga"))
 
     @commands.command(name="repeat", aliases=["toggle_repeat", "stop_repeat"], help="Repeat current song.")
     @commands.guild_only()

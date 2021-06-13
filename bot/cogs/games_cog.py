@@ -173,7 +173,6 @@ class Games(commands.Cog):
 
             # Drop piece down the selected column
             board.drop_piece(column, player.on_turn())
-            board._move_history.append(column)
 
             # If it filled up the column, invalidate that column (can't be played again)
             if not board.column_not_full(column):

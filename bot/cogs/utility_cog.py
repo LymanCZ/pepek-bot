@@ -19,8 +19,7 @@ WEATHER_TOKEN = os.getenv("WEATHER_TOKEN")
 # WolframAlpha queries
 WOLFRAM_APPID = os.getenv("WOLFRAM_APPID")
 # Google cloud APIs (VisionAI - text OCR) - it's in JSON, instead of writing to file just parsing using json library
-GOOGLE_CLOUD_CREDENTIALS = service_account.Credentials.from_service_account_info(
-    json.loads(os.getenv("GOOGLE_CLIENT_SECRETS")))
+GOOGLE_CLOUD_CREDENTIALS = service_account.Credentials.from_service_account_info(json.loads(os.getenv("GOOGLE_CLIENT_SECRETS")))
 # Used to read text from image
 google_vision = vision.ImageAnnotatorClient(credentials=GOOGLE_CLOUD_CREDENTIALS)
 # Used to translate text
@@ -38,23 +37,17 @@ class ContentError(Exception):
 def detect_text(url: str) -> str:
     """Uses Google Cloud VisionAI"""
 
-    try:
-        # Download image from url
-        # Vision library can take an URL, but this saves an invocation in case of an invalid link
-        response = requests.get(url)
-
-        # Convert data to image
-        image_bytes = io.BytesIO(response.content)
-        image = vision.types.Image(content=image_bytes.read())
+    # Convert data to image
+    image = vision.Image()
+    image.source.image_uri = url
+    response = google_vision.text_detection(image=image)
 
     # Invalid URL provided
-    except requests.exceptions.MissingSchema:
-        raise ContentError("That's not an image? {0}{1}\n{2}".format(basic_emoji.get("Pepega"), basic_emoji.get("Clap"),
-                                                                     basic_emoji.get("forsenSmug")))
+    if response.error.message:
+        raise ContentError("That's not an image? {0}{1}\n{2}".format(basic_emoji.get("Pepega"), basic_emoji.get("Clap"), basic_emoji.get("forsenSmug")))
 
     # Let VisionAI do its thing
-    cloud_response = google_vision.text_detection(image=image)
-    texts = cloud_response.text_annotations
+    texts = response.text_annotations
 
     # Couldn't read anything
     if not texts:

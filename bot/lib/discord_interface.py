@@ -26,7 +26,7 @@ async def add_choices_message(message: discord.Message, num: int, cancellable: b
     return choices
 
 
-async def wait_for_choice(bot: discord.ext.commands.Bot, user: Union[discord.User, discord.Member], message: discord.Message, choices: list, cancellable: bool = False) -> int:
+async def wait_for_choice(bot: discord.Client, user: Union[discord.User, discord.Member], message: discord.Message, choices: list, cancellable: bool = False) -> int:
     """Wait for user to react with emote, then remove their reaction
 
         Example:
@@ -63,7 +63,11 @@ async def wait_for_choice(bot: discord.ext.commands.Bot, user: Union[discord.Use
 
         # Remove user's reaction
         try:
-            await message.remove_reaction(payload.emoji.name, bot.get_user(author_id))
+            # Message.remove_reaction requires a Snowflake - according to documentation, it has 2 attributes, `id` and `created_at`
+            # Well, Snowflake is missing the `id` attribute in discord.py 1.7.3, but remove_reaction still requires it
+            snowflake = discord.abc.Snowflake
+            snowflake.id = author_id
+            await message.remove_reaction(payload.emoji.name, snowflake)
         except discord.errors.Forbidden:
             pass
 

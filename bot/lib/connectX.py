@@ -1,22 +1,11 @@
 import copy
 import math
 import random
-import time
 from multiprocessing.queues import Queue
 
 import numpy as np
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
-
-from lib.config import firefox_bin, geckodriver_path
 
 evaluation_matrix = None
-options = Options()
-options.binary_location = firefox_bin
-options.headless = True
-# Broken on Heroku
-# driver = webdriver.Firefox(options=options, executable_path=geckodriver_path)
 
 
 def create_evaluation_matrix(width, height, pieces):
@@ -52,7 +41,6 @@ class Board:
     _winning_pieces = 0
     _player_piece = 1
     _ai_piece = 2
-    _move_history = None
 
     def __init__(self, width, height, pieces):
         self.width = width
@@ -65,7 +53,6 @@ class Board:
         # Recalculate evaluation matrix if doesn't exist or is of wrong dimensions
         if evaluation_matrix is None or self._board.shape != evaluation_matrix.shape:
             create_evaluation_matrix(width, height, pieces)
-        self._move_history = list()
 
     def __iter__(self):
         """Return generator of rows"""
@@ -424,52 +411,10 @@ class Board:
 
         return column
 
-    def get_perfect_move(self, player: int):
-        """Only works for classic 7x6 board"""
-
-        if len(self._move_history) == 0:
-            return 3
-
-        if self.width != 7 or self.height != 6:
-            print("dimensions")
-            return self.get_ai_move(player, 6)
-
-        # Construct URL
-        url = "https://connect4.gamesolver.org/?pos=0"
-        if self._move_history:
-            url = "https://connect4.gamesolver.org/?pos=" + ''.join([str(x+1) for x in self._move_history])
-
-        try:
-            driver.get(url)
-            # Scrolls to bottom of page
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);var lenOfPage=document.body.scrollHeight;return lenOfPage;")
-            # Wait for browser to execute scripts...
-            time.sleep(3)
-
-            # Find results
-            solution = driver.find_element(By.ID, "solution")
-
-            cols = []
-            # Child elements
-            for col in solution.find_elements_by_xpath(".//*"):
-                if col.text:
-                    cols.append(int(col.text))
-                else:
-                    cols.append(-9999)
-
-            best = [cols.index(max(cols))]
-            return random.choice(best)
-
-        except Exception as e:
-            print(e)
-            return self.get_ai_move(player, 6)
-
     def get_ai_move_mp(self, queue: Queue, setting: int, player: int, depth: int = 6):
         """Put result in queue (for multiprocessing)"""
 
         if setting == 1:
             queue.put(self.get_ai_move(player, depth))
-        elif setting == 2:
-            queue.put(self.get_perfect_move(player))
         else:
             queue.put(random.choice(self.valid_columns()))
