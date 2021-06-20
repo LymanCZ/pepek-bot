@@ -72,7 +72,7 @@ class Games(commands.Cog):
             await ctx.send("Too many emotes specified " + basic_emoji.get("Pepega"))
 
     @commands.command(name="connect4", aliases=["connect", "connectX"], help="Play a game of Connect 4")
-    async def connect4(self, ctx, arg1: Union[discord.User, str, None], arg2: Union[discord.User, str, None]):
+    async def connect4(self, ctx, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
         """Connect 4 against another human or AI"""
 
         # Parsing input
@@ -84,7 +84,7 @@ class Games(commands.Cog):
             emote = arg2
 
         # Tagging a user creates User (or Member) class
-        if isinstance(user, discord.User):
+        if isinstance(user, discord.user.User) or isinstance(user, discord.member.Member):
             # If user is a bot -> bot is unlikely to be able to play connect4
             if user.bot:
                 await ctx.send("I don't think {0} would play with you ".format(user.mention) + basic_emoji.get("forsenSmug"))
@@ -105,7 +105,7 @@ class Games(commands.Cog):
 
         # Bot vs Bot
         bvb = False
-        if isinstance(user, discord.ClientUser) and isinstance(emote, discord.ClientUser):
+        if isinstance(user, discord.user.ClientUser) and isinstance(emote, discord.user.ClientUser):
             bvb = True
 
         elif isinstance(emote, str) and len(emote) != 0:
