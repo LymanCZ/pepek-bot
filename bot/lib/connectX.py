@@ -100,7 +100,9 @@ class Board:
         """Check if column isn't filled yet"""
 
         if not -1 < column < self.width:
-            raise ValueError(f"Column {column} out of range 0-{self.width - 1}")
+            return False
+            # raise ValueError(f"Column {column} out of range 0-{self.width - 1}")
+
         # Check only top row
         return self[self.height - 1][column] == 0
 

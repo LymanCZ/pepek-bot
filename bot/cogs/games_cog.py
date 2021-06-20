@@ -71,9 +71,38 @@ class Games(commands.Cog):
         else:
             await ctx.send("Too many emotes specified " + basic_emoji.get("Pepega"))
 
+    @commands.command(name="connect1", aliases=["connec1", "connec"], help="Play a game of Connect 1")
+    async def connect1(self, ctx, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
+        """Connect 1 against another human or AI"""
+
+        await self.connect_x(ctx, width=1, height=1, pieces=1, depth=25, arg1=arg1, arg2=arg2)
+
+    @commands.command(name="connect2", help="Play a game of Connect 2")
+    async def connect2(self, ctx, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
+        """Connect 2 against another human or AI"""
+
+        await self.connect_x(ctx, width=2, height=3, pieces=2, depth=25, arg1=arg1, arg2=arg2)
+
+    @commands.command(name="connect3", help="Play a game of Connect 3")
+    async def connect3(self, ctx, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
+        """Connect 3 against another human or AI"""
+
+        await self.connect_x(ctx, width=5, height=4, pieces=3, depth=25, arg1=arg1, arg2=arg2)
+
     @commands.command(name="connect4", aliases=["connect", "connectX"], help="Play a game of Connect 4")
     async def connect4(self, ctx, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
         """Connect 4 against another human or AI"""
+
+        await self.connect_x(ctx, width=7, height=6, pieces=4, depth=6, arg1=arg1, arg2=arg2)
+
+    @commands.command(name="connect5", help="Play a game of Connect 5")
+    async def connect5(self, ctx, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
+        """Connect 5 against another human or AI"""
+
+        await self.connect_x(ctx, width=10, height=9, pieces=5, depth=5, arg1=arg1, arg2=arg2)
+
+    async def connect_x(self, ctx, width: int, height: int, pieces: int, depth: int, arg1: Union[discord.user.User, str, None], arg2: Union[discord.user.User, str, None]):
+        """ConnectX of variable size"""
 
         # Parsing input
         if isinstance(arg1, str):
@@ -112,7 +141,7 @@ class Games(commands.Cog):
             await self.set_icon(ctx, emote)
 
         # Game setup
-        board = ConnectX(7, 6, 4)
+        board = ConnectX(width, height, pieces)
         columns = [None for _ in range(10)]
         player1 = ctx.message.author
         player2 = user
@@ -137,7 +166,7 @@ class Games(commands.Cog):
 
                 # Run AI as new process (CPU heavy)
                 queue = Queue()
-                p = Process(target=board.get_ai_move_mp, args=(queue, 1, player.on_turn()))
+                p = Process(target=board.get_ai_move_mp, args=(queue, 1, player.on_turn(), depth))
                 p.start()
                 p.join()
 
@@ -158,7 +187,7 @@ class Games(commands.Cog):
                         await ctx.send("I am missing permission to manage messages (cannot remove reactions) " + basic_emoji.get("forsenT"))
                     except discord.HTTPException:
                         pass
-                    columns = await add_choices_message(board_msg, 7, cancellable=True)
+                    columns = await add_choices_message(board_msg, width, cancellable=True)
 
                 # Wait for human to choose a column
                 column = await wait_for_choice(self.bot, player.get_user_on_turn(), board_msg, columns, cancellable=True) - 1
