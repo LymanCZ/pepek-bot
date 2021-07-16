@@ -148,7 +148,33 @@ class Fun(commands.Cog):
             return
 
         await ctx.send(cah_comic_link)
-
+    
+    @commands.command(name="news", aliases=["reuters"], help="Get the latest article from Reuters")
+    async def news(self, ctx,):
+        url = "https://www.reuters.com"
+        # Attempt to download webpage
+        try:
+            response = requests.get(url, headers)
+            response.raise_for_status()
+        except requests.HTTPError:
+            fail = await ctx.send("Bad response (status code {0}) from {1})".format(response.status_code, url))
+            await fail.add_reaction(basic_emoji.get("Si"))
+            return
+        
+        # Try to scrape webpage
+        soup = BeautifulSoup(response.content, "html.parser")
+        moreat = soup.find('a', attrs={"class":"MediaStoryCard__basic_hero___fSAEnM"})
+        link = url + (moreat['href'])
+        # If there is nothing to scrape ...
+        if not link:
+            fail = await ctx.send("Article not found on {0}".format(url))
+            await fail.add_reaction(basic_emoji.get("Si"))
+            return
+        
+        # Done
+        msg = await ctx.send(link)
+        await msg.add_reaction(random.choice(scoots_emoji))
+    
     @commands.command(name="chan", aliases=["4chan"], help="Get a random 4chan/4channel post.")
     async def chan(self, ctx, board: str = "", arg: str = ""):
         """Display random post (image in spoiler)"""
