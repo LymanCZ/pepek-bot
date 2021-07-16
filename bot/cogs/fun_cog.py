@@ -150,7 +150,7 @@ class Fun(commands.Cog):
         await ctx.send(cah_comic_link)
     
     @commands.command(name="news", aliases=["reuters"], help="Get the latest article from Reuters")
-    async def cah(self, ctx,):
+    async def news(self, ctx,):
         url = "https://www.reuters.com"
         # Attempt to download webpage
         try:
@@ -160,6 +160,7 @@ class Fun(commands.Cog):
             fail = await ctx.send("Bad response (status code {0}) from {1})".format(response.status_code, url))
             await fail.add_reaction(basic_emoji.get("Si"))
             return
+        
         # Try to scrape webpage
         soup = BeautifulSoup(response.content, "html.parser")
         moreat = soup.find('a', attrs={"class":"MediaStoryCard__basic_hero___fSAEnM"})
@@ -169,7 +170,8 @@ class Fun(commands.Cog):
             fail = await ctx.send("Article not found on {0}".format(url))
             await fail.add_reaction(basic_emoji.get("Si"))
             return
-        #Done
+        
+        # Done
         msg = await ctx.send(link)
         await msg.add_reaction(random.choice(scoots_emoji))
     
