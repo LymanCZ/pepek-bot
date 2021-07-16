@@ -151,7 +151,7 @@ class Fun(commands.Cog):
     
     @commands.command(name="news", aliases=["reuters"], help="Get the latest article from Reuters")
     async def cah(self, ctx,):
-        url = "https://www.reuters.com/"
+        url = "https://www.reuters.com"
         # Attempt to download webpage
         try:
             response = requests.get(url, headers)
