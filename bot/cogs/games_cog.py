@@ -1,4 +1,7 @@
+import json
+import random
 import re
+import requests
 from multiprocessing import Process, Queue
 from typing import Union
 
