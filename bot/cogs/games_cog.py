@@ -1,3 +1,4 @@
+import asyncio
 import json
 import random
 import re
@@ -299,12 +300,12 @@ class Games(commands.Cog):
 
             """Based on the reaction"""
             try:
-                reaction, user = await client.wait_for("reaction_add", timeout=20, check=check)
+                reaction, user = await bot.wait_for("reaction_add", timeout=20, check=check)
                 if str(reaction.emoji) == answer:
-                    statusCor = await ctx.send("Yes, ** " + correct + " **is correct.")
-                    await statusCor.add_reaction("👍")
+                    status_corr = await ctx.send("Yes, ** " + correct + " **is correct.")
+                    await status_corr.add_reaction("👍")
                     await asyncio.sleep(3)
-                    await statusCor.delete()
+                    await status_corr.delete()
                     score = score + 1
                 if str(reaction.emoji) != answer:
                     status_icon = await ctx.send("No, I don't think so. **" + correct + " **is the right answer.")
