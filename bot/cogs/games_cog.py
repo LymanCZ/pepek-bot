@@ -300,7 +300,7 @@ class Games(commands.Cog):
 
             """Based on the reaction"""
             try:
-                reaction, user = await bot.wait_for("reaction_add", timeout=20, check=check)
+                reaction, user = await self.bot.wait_for("reaction_add", timeout=20, check=check)
                 if str(reaction.emoji) == answer:
                     status_corr = await ctx.send("Yes, ** " + correct + " **is correct.")
                     await status_corr.add_reaction("👍")
