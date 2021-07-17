@@ -234,7 +234,7 @@ class Games(commands.Cog):
         await ctx.send(field.to_string(spoiler=True))
         
     @commands.command(name="quiz", aliases=["trivia"], help="I heard that you like Trivia Quiz ...")
-    async def quiz(self,ctx, arg: int = ""):
+    async def quiz(self,ctx, arg: int = 1):
         """No of Questions check"""
         if not arg:
             arg = 1
