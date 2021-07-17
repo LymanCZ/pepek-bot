@@ -233,48 +233,48 @@ class Games(commands.Cog):
 
         await ctx.send(field.to_string(spoiler=True))
         
-    @commands.command(name="quiz", aliases=["trivia"], help="I heard that you like Trivia Quiz ...")
-    async def quiz(self,ctx, arg: int = 1):
-        """No of Questions check"""
-        if not arg:
-            arg = 1
+    @commands.command(name="quiz", aliases=["trivia"], help="I heard that you like Trivia Quiz...")
+    async def quiz(self, ctx, arg: int = 1):
+        """Trivia quiz"""
+        
         if arg > 10:
             toomuch = await ctx.send("**What the hell? Way too many questions. Actually - 10 questions should be enough.**")
             await asyncio.sleep(3)
             await toomuch.delete()
             arg = 10
         
-        """Kinda useful later on"""
         i = 0
         score = 0
-        timeoutcount = 0
+        timeout_count = 0
 
         """Quiz cycle -> scrape next question and answers"""
         while i < arg:
             quiz = requests.get("https://opentdb.com/api.php?amount=1&type=multiple").json()
-            question = (quiz['results'][0]['question'])
+            question = (quiz["results"][0]["question"])
             question = question.replace("&quot;", "\"")
             question = question.replace("&#039;", "\'")
-            Q = await ctx.send("**" + question + "**")
-            correct = (quiz['results'][0]['correct_answer'])
+            question_msg = await ctx.send("**" + question + "**")
+            correct = (quiz["results"][0]["correct_answer"])
             correct = correct.replace("&quot;", "\"")
             correct = correct.replace("&#039;", "\'")
-            quiz_list = (quiz['results'][0]['incorrect_answers'])
+            quiz_list = (quiz["results"][0]["incorrect_answers"])
             quiz_list.append(correct)
             random.shuffle(quiz_list)
-            quiz_list = [w.replace('&quot;', "\"") for w in quiz_list]
-            quiz_list = [w.replace('&#039;', "\'") for w in quiz_list]
-            corIndex = quiz_list.index(correct)
+            quiz_list = [w.replace("&quot;", "\"") for w in quiz_list]
+            quiz_list = [w.replace("&#039;", "\'") for w in quiz_list]
+            corr_index = quiz_list.index(correct)
+            
             """Figure out which one is correct and compare with user's reaction"""
-            if corIndex == 0:
-                answ = '🇦'
-            elif corIndex == 1:
-                answ = '🇧'
-            elif corIndex == 2:
-                answ = '🇨'
+            if corr_index == 0:
+                answer = "🇦"
+            elif corr_index == 1:
+                answer = "🇧"
+            elif corr_index == 2:
+                answer = "🇨"
             else:
-                answ = '🇩'
-            """Add reactions -> react more :forsenJoy:"""
+                answer = "🇩"
+                
+            """Add reactions forsenJoy"""
             for x, word in enumerate(quiz_list):
                 if word == "&quot;":
                     quiz_list[x] = "\""
@@ -284,62 +284,65 @@ class Games(commands.Cog):
             for x, word in enumerate(quiz_list):
                 if word == "&amp;":
                     quiz_list[x] = "&"
-            A = await ctx.send(' | '.join(quiz_list))
-            await A.add_reaction("🇦")
-            await A.add_reaction("🇧")
-            await A.add_reaction("🇨")
-            await A.add_reaction("🇩")
-            """Waiting for the user's reaction :residentSleeper:"""
+            answer_msg = await ctx.send(" | ".join(quiz_list))
+            await answer_msg.add_reaction("🇦")
+            await answer_msg.add_reaction("🇧")
+            await answer_msg.add_reaction("🇨")
+            await answer_msg.add_reaction("🇩")
+            
+            """Waiting for the user's reaction residentSleeper"""
             def check(reaction, user):
                 return str(reaction.emoji) and user == ctx.author
 
-            """Based on the reaction ..."""
+            """Based on the reaction"""
             try:
-                reaction, user = await client.wait_for('reaction_add', timeout=20, check=check)
-                if str(reaction.emoji) == answ:
+                reaction, user = await client.wait_for("reaction_add", timeout=20, check=check)
+                if str(reaction.emoji) == answer:
                     statusCor = await ctx.send("Yes, ** " + correct + " **is correct.")
                     await statusCor.add_reaction("👍")
                     await asyncio.sleep(3)
                     await statusCor.delete()
                     score = score + 1
-                if str(reaction.emoji) != answ:
-                    statusInco = await ctx.send("No, I don't think so. **" + correct + " **is the right answer.")
-                    await statusInco.add_reaction(basic_emoji.get("Sadge"))
+                if str(reaction.emoji) != answer:
+                    status_icon = await ctx.send("No, I don't think so. **" + correct + " **is the right answer.")
+                    await status_icon.add_reaction(basic_emoji.get("Sadge"))
                     await asyncio.sleep(5)
-                    await statusInco.delete()
+                    await status_icon.delete()
             except asyncio.TimeoutError:
                 to = await ctx.send("You ran out of time!")
                 await to.add_reaction(basic_emoji.get("Pepega"))
                 await asyncio.sleep(3)
                 await to.delete()
-                timeoutcount = timeoutcount + 1
-            """Let me just delete the question real quick ... and repeat the cycle"""
+                timeout_count += 1
+                
+            """Delete the question and repeat the cycle"""
             i += 1
-            await Q.delete()
-            await A.delete()
-            """Dedicated to AFK users"""
-            if (timeoutcount == arg and arg > 1):
-                afk = await ctx.send("You absolute Pepeg. Imagine requesting my Quiz and then being AFK.")
-                await afk.add_reaction(basic_emoji.get("Pepega"))
-                await afk.add_reaction(basic_emoji.get("Clap"))
+            await question_msg.delete()
+            await answer_msg.delete()
+            
+            """User AFK"""
+            if timeout_count == arg and arg > 1:
+                afk = await ctx.send("Timed out.")
+                await afk.add_reaction(basic_emoji.get("Si"))
                 return
+            
             """Conclusion"""
-            if (i == arg and arg > 1):
+            if i == arg and arg > 1:
                 count = score / arg
                 if count > 0.7:
-                    conclusion_list = ["That's a lot of knowledge.", "Smart one,are not you?", "PhDr. Milan Beneš would be proud.", "Well met!", "Never doubt the god gamer!","That was pretty good.","EZ4ANTS"]
+                    conclusion_list = ["That's a lot of knowledge.", "Smart one, are not you?", "PhDr. Milan Beneš would be proud.", "Well met!", "Never doubt the god gamer!", "That was pretty good.", "EZ4ANTS"]
                     conclusion = random.choice(conclusion_list)
                 elif count > 0.5:
-                    conclusion_list = ["Not Great, Not Terrible", "That was ... pretty average, I guess?", "Nice try nontheless.","Enough points to pass my exam."]
+                    conclusion_list = ["Not Great, Not Terrible", "That was... pretty average, I guess?", "Nice try nontheless.", "Enough points to pass my exam."]
                     conclusion = random.choice(conclusion_list)
                 elif count > 0.3:
-                    conclusion_list = ["I can tell that this is not your lucky day, is it?", "Never lucky man ...", "Better luck next time!","Pretty underwhelming."]
+                    conclusion_list = ["I can tell that this is not your lucky day, is it?", "Never lucky man ...", "Better luck next time!", "Pretty underwhelming."]
                     conclusion = random.choice(conclusion_list)
                 elif count > 0.1:
-                    conclusion_list = ["MAN VA FAN.", "Terrible ...", "Blame it on the black star.","Just unlucky, right?","Next time, you should try harder."]
+                    conclusion_list = ["MAN VA FAN.", "Terrible...", "Blame it on the black star.", "Just unlucky, right?", "Next time, you should try harder."]
                     conclusion = random.choice(conclusion_list)
                 else:
-                    conclusion_list = ["You are trolling, right?", "Apparently you have got more chromosomes than I thought.","Is this some kind of twisted joke?","A total waste of time.","ZULOL"]
+                    conclusion_list = ["You are trolling, right?", "Apparently you have got more chromosomes than I thought.", "Is this some kind of twisted joke?", "A total waste of time.", "ZULOL"]
                     conclusion = random.choice(conclusion_list)
                 await ctx.send("**You have answered " + str(score) + " out of " + str(arg) + " questions correctly. " + conclusion + "**")
 
