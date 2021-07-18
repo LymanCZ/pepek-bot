@@ -80,6 +80,11 @@ async def on_command_error(ctx, error):
         await ctx.message.add_reaction(basic_emoji.get("Si"))
         await ctx.send("{0}📣 UNEXPECTED QUOTE ERROR\nUse `\\` to escape your quote(s) {1}".format(basic_emoji.get("Pepega"), basic_emoji.get("forsenScoots")))
 
+    # Command cooldown
+    elif isinstance(error, commands.CommandOnCooldown):
+        await ctx.message.add_reaction(basic_emoji.get("Si"))
+        await ctx.send("That command is on cooldown.")
+        
     else:
         raise error
 
