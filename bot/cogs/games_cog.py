@@ -356,14 +356,6 @@ class Games(commands.Cog):
                     conclusion_list = ["You are trolling, right?", "Apparently you have got more chromosomes than I thought.", "Is this some kind of twisted joke?", "A total waste of time.", "ZULOL"]
                     conclusion = random.choice(conclusion_list)
                 await ctx.send("**You have answered " + str(score) + " out of " + str(arg) + " questions correctly. " + conclusion + "**")
-    
-    @bot.event
-     async def on_command_error(ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            cooldown_msg = await ctx.send("Damn NaM spam ...")
-            await asyncio.sleep(3)
-            await cooldown_msg.delete()             
-            
                 
 def setup(bot):
     bot.add_cog(Games(bot))
