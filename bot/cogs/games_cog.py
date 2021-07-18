@@ -252,7 +252,7 @@ class Games(commands.Cog):
             impossible_arg = await ctx.send("Not possible, how about 3 questions instead?")
             await asyncio.sleep(3)
             await impossible_arg.delete()
-            arg = 5
+            arg = 3
         
         i = 0
         score = 0
@@ -307,7 +307,7 @@ class Games(commands.Cog):
 
             """Based on the reaction"""
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", timeout=20, check=check)
+                reaction, user = await self.bot.wait_for("reaction_add", timeout=25, check=check)
                 if str(reaction.emoji) == answer:
                     status_corr = await ctx.send("Yes, ** " + correct + " **is correct.")
                     await status_corr.add_reaction("👍")
@@ -344,7 +344,7 @@ class Games(commands.Cog):
                     conclusion_list = ["That's a lot of knowledge.", "Smart one, are not you?", "PhDr. Milan Beneš would be proud.", "Well met!", "Never doubt the god gamer!", "That was pretty good.", "EZ4ANTS"]
                     conclusion = random.choice(conclusion_list)
                 elif count > 0.5:
-                    conclusion_list = ["Not Great, Not Terrible", "That was... pretty average, I guess?", "Nice try nontheless.", "Enough points to pass my exam."]
+                    conclusion_list = ["Not Great, Not Terrible", "That was... pretty average, I guess?", "Nice try nonetheless.", "Enough points to pass my exam."]
                     conclusion = random.choice(conclusion_list)
                 elif count > 0.3:
                     conclusion_list = ["I can tell that this is not your lucky day, is it?", "Never lucky man ...", "Better luck next time!", "Pretty underwhelming."]
