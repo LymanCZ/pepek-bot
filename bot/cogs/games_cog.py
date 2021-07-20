@@ -359,7 +359,7 @@ class Games(commands.Cog):
     
     @client.command(name="hangman", aliases=["hm"], help="Hangman: The Videogame")
     @commands.cooldown(1,30,commands.BucketType.user)
-    async def nig(self,ctx):
+    async def hangman(self,ctx):
         
         """Scrape random word"""
         source = requests.get("https://random-word-api.herokuapp.com/word?number=1").text
