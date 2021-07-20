@@ -376,10 +376,11 @@ class Games(commands.Cog):
             return
         if not word.isalpha():
             await ctx.send("Random word contained non-alphabetical character(s), try again.")
+            return
     
         # Hangman itself
         play_field = await ctx.send("_-_-_-_-_-_-_-_-_-_-_-_-\n|\n|\n|\n|\n|\n|")
-        guessed_letters = await ctx.send(f"**React here ⬇️ This word has {len(word)} letters**")
+        guessed_letters = await ctx.send(f"**React here ⬇️, this word has {len(word)} letters**")
     
         # Game variables
         mistakes = 0
