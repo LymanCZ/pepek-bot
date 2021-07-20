@@ -356,6 +356,116 @@ class Games(commands.Cog):
                     conclusion_list = ["You are trolling, right?", "Apparently you have got more chromosomes than I thought.", "Is this some kind of twisted joke?", "A total waste of time.", "ZULOL"]
                     conclusion = random.choice(conclusion_list)
                 await ctx.send("**You have answered " + str(score) + " out of " + str(arg) + " questions correctly. " + conclusion + "**")
+    
+    @client.command(name="hangman", aliases=["hm"], help="Hangman: The Videogame")
+    @commands.cooldown(1,30,commands.BucketType.user)
+    async def nig(self,ctx):
+        
+        """Scrape random word"""
+        source = requests.get("https://random-word-api.herokuapp.com/word?number=1").text
+        soup = BeautifulSoup(source,"html.parser")
+        word = str(soup)
+        word = re.sub('[^a-zA-Z]+', '', word)
+
+        """:painsge:"""
+        word = word.replace("a", "🇦")
+        word = word.replace("b", "🇧")
+        word = word.replace("c", "🇨")
+        word = word.replace("d", "🇩")
+        word = word.replace("e", "🇪")
+        word = word.replace("f", "🇫")
+        word = word.replace("g", "🇬")
+        word = word.replace("h", "🇭")
+        word = word.replace("i", "🇮")
+        word = word.replace("j", "🇯")
+        word = word.replace("k", "🇰")
+        word = word.replace("l", "🇱")
+        word = word.replace("m", "🇲")
+        word = word.replace("n", "🇳")
+        word = word.replace("o", "🇴")
+        word = word.replace("p", "🇵")
+        word = word.replace("q", "🇶")
+        word = word.replace("r", "🇷")
+        word = word.replace("s", "🇸")
+        word = word.replace("t", "🇹")
+        word = word.replace("u", "🇺")
+        word = word.replace("v", "🇻")
+        word = word.replace("w", "🇼")
+        word = word.replace("x", "🇽")
+        word = word.replace("y", "🇾")
+        word = word.replace("z", "🇿")
+
+        original_word = word
+        letter_no = (len(word))
+        hidden_word = letter_no * "_"
+        i = 0
+        mistakes_no = 0
+    
+        """Hangman itself"""
+        play_field = await ctx.send("_-_-_-_-_-_-_-_-_-_-_-_-\n|\n|\n|\n|\n|\n|")
+        guessed_letters = await ctx.send(f"**React here ⬇️ This word has {letter_no} letters**")
+        await guessed_letters.add_reaction("❌")
+    
+        """Various conditions"""
+        while i < letter_no:
+            def check(reaction, user):
+                return str(reaction.emoji) and user == ctx.author
+      
+            try:
+                reaction, user = await client.wait_for('reaction_add', timeout=60, check=check)
+            
+            """Forfeited"""
+            if str (reaction.emoji) == "❌":
+                ff = await ctx.send(f"Forfeited ... the word is: ```{original_word}```")
+                await asyncio.sleep(5)
+                await guessed_letters.delete()
+                await play_field.delete()
+                await ff.delete()
+                return
+            
+            """Wrong letter"""
+            if str(reaction.emoji) not in word:
+                mistakes_no = mistakes_no + 1
+                if mistakes_no == 1:
+                    await play_field.edit(content="_-_-_-_-_-_-_-_-_-_-_-_-\n|            🧢\n| \n|\n|\n|\n|")
+                if mistakes_no == 2:
+                    await play_field.edit(content="_-_-_-_-_-_-_-_-_-_-_-_-\n|            🧢\n|            😟\n|\n|\n|\n|")
+                if mistakes_no == 3:
+                    await play_field.edit(content="_-_-_-_-_-_-_-_-_-_-_-_-\n|            🧢\n|            😟\n|            👕\n|\n|\n|")
+                if mistakes_no == 4:
+                    await play_field.edit(content="_-_-_-_-_-_-_-_-_-_-_-_-\n|            🧢\n|            😟\n|            👕\n|            🩳\n|\n|")
+                if mistakes_no == 5:
+                    await play_field.edit(content="_-_-_-_-_-_-_-_-_-_-_-_-\n|            🧢\n|            😟\n|            👕\n|            🩳\n|          👞👞\n|")
+                    await guessed_letters.delete()
+                    await ctx.send(f"Pepek Jr. died! The word is:``` {original_word}```")
+                    return
+            
+            """Right letter"""
+            if str(reaction.emoji) in word:
+                count = word.count(reaction.emoji)
+                letter_me = ([pos for pos, char in enumerate(original_word) if char ==   reaction.emoji])
+
+                z=0
+                while z < count:
+                    letter_index = (letter_me[z])
+                    hidden_word = hidden_word[:letter_index] + reaction.emoji + hidden_word[letter_index+1:]
+                    z = z + 1
+
+                word = word.replace(reaction.emoji,"")
+                i = i+count
+                await guessed_letters.edit(content ="```" + hidden_word + "```")
+        
+      except asyncio.TimeoutError:
+        to = await ctx.send("You ran out of time!")
+        await asyncio.sleep(3)
+        await to.delete()
+        await guessed_letters.delete()
+        await play_field.delete()
+        return
+  
+    await guessed_letters.delete()
+    await ctx.send(f"You win - the word is: ```{original_word}```")            
+                
                 
 def setup(bot):
     bot.add_cog(Games(bot))
