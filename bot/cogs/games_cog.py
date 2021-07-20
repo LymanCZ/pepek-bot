@@ -412,7 +412,7 @@ class Games(commands.Cog):
                 return str(reaction.emoji) and user == ctx.author
       
             try:
-                reaction, user = await client.wait_for('reaction_add', timeout=60, check=check)
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=60, check=check)
             
             """Forfeited"""
             if str (reaction.emoji) == "❌":
